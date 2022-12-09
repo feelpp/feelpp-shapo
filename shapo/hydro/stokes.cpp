@@ -1,4 +1,5 @@
-#include<shapo/hydro/shapo_hydro.hpp>
+#define SHAPO_NOEXTERN 1
+#include<shapo/hydro/hydro.hpp>
 
 namespace shapo
 {

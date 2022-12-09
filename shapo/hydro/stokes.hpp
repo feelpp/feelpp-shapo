@@ -428,6 +428,9 @@ namespace Feel
         }
             
     }
-    
+#if !defined(SHAPO_NOEXTERN)
+extern template class stokesShapeOpt<Simplex<3>, Lagrange<2, Vectorial>, Lagrange<2, Vectorial>, Lagrange<1, Vectorial>>;
+extern template class ShapeOpt<Simplex<3>, Lagrange<2, Vectorial>, Lagrange<2, Vectorial>, Lagrange<1, Vectorial>>;
+#endif
 
 } // end namespace Feel
