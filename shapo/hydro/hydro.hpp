@@ -1,5 +1,12 @@
+#include<feel/feeldiscr/pch.hpp>
+#include<feel/feeldiscr/mesh.hpp>
+#include<feel/feelfilters/exporter.hpp>
+#include<iostream>
+
 namespace Feel::shapo::hydro 
 {
+    using namespace Feel;
+    
     template< typename ConvexType, typename PrimalBasisType, typename AdjointBasisType, typename DescentBasisType>
     class ShapeOpt
     {

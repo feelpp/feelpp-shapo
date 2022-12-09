@@ -1,8 +1,6 @@
 
 #include<feel/feelfilters/loadmesh.hpp>
-#include<feel/feelfilters/exporter.hpp>
 #include<feel/feelvf/on.hpp>
-#include<feel/feeldiscr/pch.hpp>
 #include <feel/feelmesh/meshmover.hpp>
 #include<feel/feeldiscr/createsubmesh.hpp>
 #include <feel/feeldiscr/quality.hpp>
