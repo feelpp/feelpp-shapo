@@ -6,7 +6,7 @@ jobs:
   activate:
     runs-on: ubuntu-latest
     if: |
-      github.repository == 'feelpp/feelpp-project' &&
+      github.repository == 'feelpp/feelpp-shapo' &&
       !startsWith(github.event.head_commit.message, 'Release ') &&
       !contains(github.event.head_commit.message, 'ci skip')
     steps:
