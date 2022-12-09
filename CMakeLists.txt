@@ -22,9 +22,9 @@
 #
 #
 cmake_minimum_required(VERSION 3.21.0)
-project(myproject VERSION 1.0.3)
+project(shapo VERSION 1.0.3)
 set(EXTRA_VERSION "")
-set(PROJECT_SHORTNAME "myproject")
+set(PROJECT_SHORTNAME "shapo")
 
 include(GNUInstallDirs)
 
@@ -48,7 +48,7 @@ if ( NOT TARGET check )
 endif()
 
 
-add_subdirectory( src )
+add_subdirectory( shapo )
 add_subdirectory( docs )
 
 # extra ignored files
@@ -63,8 +63,8 @@ set(CPACK_PACKAGE_NAME "${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSI
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}${EXTRA_VERSION}")
 SET(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}${EXTRA_VERSION}-${CMAKE_SYSTEM_NAME}")
 set(CPACK_PACKAGE_DIRECTORY "${PROJECT_BINARY_DIR}/assets")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cemosis feelpp-project template application")
-set(CPACK_PACKAGE_DESCRIPTION "Cemosis provides a Feel++ template application.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cemosis shapo toolbox and application")
+set(CPACK_PACKAGE_DESCRIPTION "Cemosis provides the shapo toolbox and application.")
 set(CPACK_PACKAGE_VENDOR "Cemosis")
 set(CPACK_PACKAGE_CONTACT "Christophe Prud'homme <christophe.prudhomme@cemosis.fr>")
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")

@@ -1,4 +1,9 @@
 {
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
-    "cmake.buildDirectory": "${workspaceFolder}/build-${variant:buildType}"
+    "cmake.buildDirectory": "${workspaceFolder}/build-${variant:buildType}",
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#4D1155",
+        "titleBar.activeBackground": "#6C1878",
+        "titleBar.activeForeground": "#FEFCFE"
+    }
 }

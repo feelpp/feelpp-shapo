@@ -1,0 +1,50 @@
+== Shape optimization for a body in Stokes flow
+
+We provide a class for the computation of a shape optimization problem in Stokes flow, using the tools from theoretical shape optimization.
+The cost function is, for the moment, given by the coefficients of the Grand Resistance Tensor (see for instance Kim-Karrila "Microhydrodynamics" for a definition), which links the speeds of the moving object with the force/torques that are applied.
+A volume constraint is imposed, via the augmented Lagrangian method.
+The developments are based on an article by Moreau C. and Privat Y.
+The steps for the solution of such problem are:
+
+* Solution of the primal problem (Stokes equations)
+* Solution of the adjoint problem (Stokes equations)
+* Computation of the shape derivative
+* Computation of the descent direction (function deforming the shape)
+* Computation of the descent step
+* Update of the Augmented Lagrangian parameters
+
+The application that created is: _feelpp_sw_stokes_shape_opt_
+
+Different examples can be run by choosing the appropriate _cfg_ file in the _cases_ folder and typing, in the command line (see the article for the definition of the coefficients)
+
+* for the computation of the C11 coefficient 
+----
+./feelpp_sw_stokes_shape_opt --config-file cases/stokes_shape_opt_C11.cfg
+----
+* for the computation of the K11 coefficient
+----
+./feelpp_sw_stokes_shape_opt --config-file cases/stokes_shape_opt_K11.cfg
+----
+
+* for the computation of the K12 coefficient
+----
+./feelpp_sw_stokes_shape_opt --config-file cases/stokes_shape_opt_K12.cfg
+----
+
+* for the computation of the Q11 coefficient
+----
+./feelpp_sw_stokes_shape_opt --config-file cases/stokes_shape_opt_Q11.cfg
+----
+
+* for the computation of the Q12 coefficient
+----
+./feelpp_sw_stokes_shape_opt --config-file cases/stokes_shape_opt_Q12.cfg
+----
+
+=== Notes on the implementation
+
+* It is possible to compute the shapes that minimize/maximize the cost function by changing the value of the option _minimize-objective-function_. By default, the cost function is minimized
+
+* The update rule of the Augmented Lagrangian parameters follows the article's one. However, in order for the multiplier to converge, and the volume constraint to be satisfied, subiterations for the same value of the penalty parameter _b_ are performed.
+
+* The cost function and the constraint are normalized by, respectively, the cost function evaluated at the shape, and the volume of the initial shape.
