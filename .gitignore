@@ -1,0 +1,45 @@
+node_modules/
+build*/
+docs/public/
+docs/cache/
+*.bak
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Emacs files
+*~
+\#*\#
+*.elc
+auto-save-list
+tramp
+.\#*
