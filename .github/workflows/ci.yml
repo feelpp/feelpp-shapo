@@ -23,7 +23,7 @@ jobs:
     - name: Install credentials
       run: echo https://$GITHUB_OAUTH:@github.com > $HOME/.git-credentials
       env:
-        GITHUB_OAUTH: ${{ secrets.DOCS_GITHUB_KEY }}
+        GITHUB_OAUTH: ${{ secrets.CR_PAT }}
     - name: Build
       run: |
         npm install
