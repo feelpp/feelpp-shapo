@@ -12,7 +12,7 @@
 
 // NB: All normals are inversed N() -> -N() because the normal in the paper is pointing outward with respect to the shape; 
 // here N() points inside the the empty shape
-namespace Feel
+namespace Feel::shapo::hydro
 {
 // ------------- STOKES SHAPEOPT CLASS -----------
     template< typename ConvexType, typename PrimalBasisType, typename AdjointBasisType, typename DescentBasisType>

@@ -1,4 +1,4 @@
-namespace Feel
+namespace Feel::shapo::hydro 
 {
     template< typename ConvexType, typename PrimalBasisType, typename AdjointBasisType, typename DescentBasisType>
     class ShapeOpt
