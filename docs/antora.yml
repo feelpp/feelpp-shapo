@@ -1,6 +1,10 @@
-name: template_project
-title: Feel++ Templace Project
-version: '1.0.3'
+name: shapo
+title: Feel++ ShapO
+version: ~
 start_page: ROOT:index.adoc
 nav:
 - modules/ROOT/nav.adoc
+asciidoc:
+  attributes:
+    shapo: ShapO
+

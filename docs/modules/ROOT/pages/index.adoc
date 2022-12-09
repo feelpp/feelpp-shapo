@@ -1,4 +1,4 @@
-= MyProject
+= {feelpp} {shapo} Project
 
 This is a {feelpp} Template Project. 
 It serves as a template for {feelpp} projects.
