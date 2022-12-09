@@ -30,5 +30,5 @@ target_include_directories(feelpp_shapo_hydro PUBLIC
   $<INSTALL_INTERFACE:include/feelpp> ) 
 target_link_libraries(feelpp_shapo_hydro PUBLIC Feelpp::feelpp)
 
-feelpp_add_application( hydro_stokes SRCS stokes.cpp INCLUDE_IN_ALL DEFS FEELPP_DIM=3 LINK_LIBRARIES feelpp_shapo_hydro EXEC STOKES_SHAPE_OPT INSTALL  )
+feelpp_add_application( hydro_stokes SRCS main_stokes.cpp INCLUDE_IN_ALL DEFS FEELPP_DIM=3 LINK_LIBRARIES feelpp_shapo_hydro EXEC STOKES_SHAPE_OPT INSTALL  )
 feelpp_add_testcase( cases PREFIX shapo CATEGORY hydro )

@@ -4,7 +4,7 @@
 int main(int argc, char** argv)
 {
     using namespace Feel;
-    using Feel::shapo::hydro;
+    using namespace Feel::shapo::hydro;
 
     Feel::po::options_description shape_optimization_options;
     shape_optimization_options.add_options()
