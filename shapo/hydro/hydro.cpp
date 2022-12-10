@@ -14,9 +14,11 @@ namespace Feel::shapo::hydro {
     template< typename ConvexType, typename PrimalBasisType, typename AdjointBasisType, typename DescentBasisType>
     void ShapeOpt<ConvexType,PrimalBasisType,AdjointBasisType,DescentBasisType>::init()
     {
+        LOG(INFO) << fmt::format("[ShapeOpt::init] starts") << std::endl;
         // Define the mesh for the fluid domain
         this->mesh_initial = loadMesh(_mesh=new mesh_type,_filename=soption("gmsh.filename"));
         M_mesh = createSubmesh(_mesh=this->mesh_initial,_range=markedelements(this->mesh_initial,"Fluid"));
+        LOG(INFO) << fmt::format("[ShapeOpt::init] mesh loaded and extracted Fluid submesh") << std::endl;
 
         primalSpace = primal_space_type::New(_mesh=this->mesh());
         adjointSpace = adjoint_space_type::New(_mesh=this->mesh());
@@ -26,12 +28,14 @@ namespace Feel::shapo::hydro {
         adjointVariable = adjointSpace->elementPtr("adjointVariable");
         descentVariable = descentSpace->elementPtr("descentVariable");
         shapeGradient = descentSpace->elementPtr("shapeGradient");
+        LOG(INFO) << fmt::format("[ShapeOpt::init] spaces and elements created") << std::endl;
 
         exporterPrimal = exporter(_mesh=this->mesh(),_name="exporterPrimal",_geo="change");
         exporterAdjoint = exporter(_mesh=this->mesh(),_name="exporterAdjoint",_geo="change");
         exporterDescent = exporter(_mesh=this->mesh(),_name="exporterDescent",_geo="change");
         exporterOpti= exporter(_mesh=this->mesh(),_name="exporterOpti",_geo="change");
-
+        LOG(INFO) << fmt::format("[ShapeOpt::init] exporters created") << std::endl;
+        
         // Read the values of these variables from the options
         lnp1 = doption("l0");
         bnp1 = doption("b0");
@@ -58,9 +62,9 @@ namespace Feel::shapo::hydro {
         // Compute the volume of the shape
         volumeConstraint =this->volCompDomain;
         volumeConstraint -= integrate(_range=markedelements(this->mesh(),"Fluid"),_expr=cst(1.)).evaluate()(0,0);
-        
         volShape = volumeConstraint;
-             
+        LOG(INFO) << fmt::format("[ShapeOpt::init] volume of the shape computed: {} constraint: {}", this->volCompDomain, volumeConstraint) << std::endl;
+
         cost_function = 1e5;     
         
         std::cout << "Volume of the initial shape " << this->volShape <<std::endl;
@@ -75,6 +79,7 @@ namespace Feel::shapo::hydro {
         std::ofstream M_fileresults( M_fileresults_name.c_str(), std::ios::trunc );
         M_fileresults<<"Cost function"<<","<<"Volume of the shape"<<","<<"L2 norm of the descent step"<<"\n";
         M_fileresults.close();
+        LOG(INFO) << fmt::format("[ShapeOpt::init] done") << std::endl;
     }
 
 

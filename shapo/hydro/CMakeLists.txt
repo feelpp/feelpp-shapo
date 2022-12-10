@@ -32,3 +32,6 @@ target_link_libraries(feelpp_shapo_hydro PUBLIC Feelpp::feelpp)
 
 feelpp_add_application( hydro_stokes SRCS main_stokes.cpp INCLUDE_IN_ALL DEFS FEELPP_DIM=3 LINK_LIBRARIES feelpp_shapo_hydro EXEC STOKES_SHAPE_OPT INSTALL  )
 feelpp_add_testcase( cases PREFIX shapo CATEGORY hydro )
+
+add_test(shapo_c11_np_1 ${PROJECT_BINARY_DIR}/shapo/hydro/${STOKES_SHAPE_OPT} --config-file ${CMAKE_CURRENT_SOURCE_DIR}/cases/stokes_shape_opt_C11.cfg --itmax=3)
+add_test(shapo_c11_np_2 ${MPIEXEC_EXECUTABLE} -np 2 ${PROJECT_BINARY_DIR}/shapo/hydro/${STOKES_SHAPE_OPT} --config-file ${CMAKE_CURRENT_SOURCE_DIR}/cases/stokes_shape_opt_C11.cfg --itmax=3)

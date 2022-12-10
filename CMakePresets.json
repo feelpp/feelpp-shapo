@@ -93,6 +93,16 @@
                 "noTestsAction": "error",
                 "stopOnFailure": true
             }
+        },
+        {
+            "name": "install-local",
+            "configurePreset": "install-local",
+            "inherits": "default"
+        },
+        {
+            "name": "install",
+            "configurePreset": "install",
+            "inherits": "default"
         }
     ],
     "vendor": {
