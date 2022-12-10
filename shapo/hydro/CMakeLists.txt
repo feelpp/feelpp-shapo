@@ -23,7 +23,7 @@
 #
 cmake_minimum_required(VERSION 3.21)
 
-add_library(feelpp_shapo_hydro SHARED stokes.cpp)
+add_library(feelpp_shapo_hydro SHARED stokes.cpp hydro.cpp)
 target_compile_definitions(feelpp_shapo_hydro PRIVATE FEELPP_DIM=3)
 target_include_directories(feelpp_shapo_hydro PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>

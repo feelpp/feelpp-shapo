@@ -28,7 +28,7 @@
             "displayName": "Build and Install system",
             "description": "Build and Install in /usr/local",
             "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/install-local",
+            "binaryDir": "${sourceDir}/build/install-usrlocal",
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_INSTALL_PREFIX": "/usr/local"
@@ -45,10 +45,10 @@
             "displayName": "Build and Install in user land",
             "description": "Build and Install in user land",
             "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/install",
+            "binaryDir": "${sourceDir}/build/install-user",
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/"
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/install-user/install/"
             },
             "vendor": {
                 "example.com/ExampleIDE/1.0": {

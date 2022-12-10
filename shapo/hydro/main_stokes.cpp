@@ -36,9 +36,9 @@ int main(int argc, char** argv)
                      _worldcomm= Environment::worldComm());
 
     stokesShapeOpt<Simplex<3>,
-    Lagrange<2, Vectorial>,
-    Lagrange<2, Vectorial>,
-    Lagrange<1, Vectorial>> shape_opt;
+                   Lagrange<2, Vectorial>,
+                   Lagrange<2, Vectorial>,
+                   Lagrange<1, Vectorial>> shape_opt;
 
 #if 1
     shape_opt.solveShapeOptimization();

@@ -22,7 +22,7 @@
 #
 #
 cmake_minimum_required(VERSION 3.21.0)
-project(shapo VERSION 1.0.3)
+project(shapo VERSION 1.0.0)
 set(EXTRA_VERSION "")
 set(PROJECT_SHORTNAME "shapo")
 
