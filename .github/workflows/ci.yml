@@ -68,9 +68,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         # Artifact name
-        name: feelpp-project-artifacts
+        name: feelpp-shapo-artifacts
         # Directory containing files to upload
-        path: build/default/assets/myproject-*
+        path: build/default/assets/shapo-*
 
   check:
     needs: build_code
@@ -81,7 +81,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         # Artifact name
-        name: feelpp-project-artifacts
+        name: feelpp-shapo-artifacts
         # Directory containing files to upload
         path: build/default/assets/
     - name: Display Artifact
@@ -102,7 +102,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         # Artifact name
-        name: feelpp-project-artifacts
+        name: feelpp-shapo-artifacts
         path: artifacts/
     -
         name: Docker meta
@@ -110,7 +110,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/feelpp/feelpp-project
+            ghcr.io/feelpp/feelpp-shapo
           tags: |
             type=ref,event=branch
             type=ref,event=pr
