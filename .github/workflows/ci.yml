@@ -78,7 +78,7 @@ jobs:
     name: Check Build, Install, Run
     steps:
     - name: Download 
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         # Artifact name
         name: feelpp-shapo-artifacts
@@ -99,7 +99,7 @@ jobs:
         lfs: true
         submodules: 'recursive'
     - name: Download 
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         # Artifact name
         name: feelpp-shapo-artifacts
