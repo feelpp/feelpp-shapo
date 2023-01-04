@@ -1,0 +1,197 @@
+:page-pseudocode: ["algo"]
+= Shape optimisation in Stokes flow
+:toc:
+
+The purpose of this section is to implement the shape optimisation algorithm 
+described in the article _Shapes optimising grand resistance tensor entries for a rigid body in a Stokes flow_.
+We will first state the problem, then we will detail the optimisation framework and 
+give the different steps of its algorithm.
+
+== Problem statement
+
+We consider a solid stem:[\mathcal{S}] placed in a domain 
+stem:[\mathcal{F}=\mathbb{R}^3\setminus \mathcal{S}], filled with 
+an incompressible fluid at low Reynolds number. A no-slip condition is 
+imposed on the domain boundary stem:[\partial \mathcal{F}]. 
+The fluid velocity stem:[u] and pressure stem:[p] are described by the Stokes equations: 
+
+[stem]
+++++
+\begin{equation*}
+	\begin{aligned}
+		-\mu \Delta u + \nabla p &= 0 \quad &\text{in $\mathcal{F}$}\\
+		\nabla \cdot u &= 0 \quad &\text{in $\mathcal{F}$}\\
+		u &= U \quad &\text{on $\partial \mathcal{S}$}\\
+		u &= 0 \quad &\text{on $\partial \mathcal{F} \setminus \partial \mathcal{S}$}
+	\end{aligned}
+\end{equation*}
+++++
+where stem:[U] describes the motion of the solid and stem:[\mu] the fluid viscosity.
+
+The motion of the solid is characterized by its translational and angular velocity.
+These two quantities are partially influenced by the fluid forces and torques acting on the solid, thus by the hydrodynamic resistance. 
+Considering a Stokes flow, the relation between the 
+solid motion and the hydrodynamic resistance is linear and expressed by the _grand resistance tensor_. 
+This latter is defined by nine tensors. We focus on four of these tensors:
+
+- stem:[K] :  coupling between hydrodynamical force and translational velocity. 
+- stem:[C] :  coupling between hydrodynamical force and rotational velocity. 
+- stem:[\bar{C}] :  coupling between hydrodynamical torque and translational velocity. 
+- stem:[Q] :  coupling between hydrodynamical torque and rotational velocity. 
+
+Considering a fixed reference frame, these tensors only depend on the solid shape.  
+The aim is to determine the optimal solid surface stem:[\partial \mathcal{S}] that minimizes or maximizes the 
+hydrodynamic resistance parameters, hence the tensors stem:[K,C,\bar{C},Q].
+
+The coefficients of these four tensors
+can be defined by the following surface integral: 
+[stem]
+++++
+J_V(\partial \mathcal{S}) = - \int_{\partial \mathcal{S}} \sigma (u,p) \vec{n} \cdot V dS
+++++
+where stem:[\sigma (u,p) = - p I + \mu ( \nabla u + \nabla u^T)] the stress tensor and 
+the values for stem:[U] and stem:[V] are fixed as described in the table:
+
+|===
+
+|stem:[J_V] | stem:[U]  | stem:[V] 
+   
+|stem:[K_{i,j}] | stem:[e_j]  |  stem:[e_i]  
+|stem:[C_{i,j}] | stem:[e_j \times x]  |  stem:[e_i]  
+|stem:[\bar{C}_{i,j}] | stem:[e_j]  |  stem:[e_i \times x]  
+|stem:[Q_{i,j}] | stem:[e_j \times x]  |  stem:[e_i \times x]  
+
+|===
+
+== Optimisation framework
+
+The surface integral stem:[J_V] represents the objective function of the 
+optimisation problem, given by:
+[stem]
+++++
+\min_{|\mathcal{S}| = |\mathcal{S_0}|} J_V(\partial \mathcal{S}),
+++++
+where the constraint stem:[|\mathcal{S}| = |\mathcal{S_0}|] imposes that the volume of 
+the solid remains constant. 
+
+To deform the solid, one defines a vector field stem:[\theta : \mathbb{R}^3 \mapsto \mathbb{R}^3]. The new shape is then given by
+
+[stem]
+++++
+\partial \mathcal{S_{\theta}} = (I + \theta)\partial \mathcal{S}.
+++++
+
+For our optimisation problem, the deformation vector stem:[\theta] gives the 
+descent direction and has to ensure three conditions:  
+
+- A smooth deformation, i.e. a small variation of the shape. 
+- The constraint on the volume. 
+- The decrease of the objective function:
+
+[stem]
+++++
+J_V(\partial \mathcal{S_{\theta}}) \leq J_V(\partial \mathcal{S}).
+++++
+
+The notion of shape derivative is used to determine such a descent direction. 
+The shape derivative stem:[< d J( \partial \mathcal{S}),\theta>] defines 
+the variation of the objective function for a small deformation of the solid surface. 
+One has: 
+[stem]
+++++
+ < d J_V( \partial \mathcal{S}),\theta> = \lim_{\varepsilon \to 0} \frac{J_V(I + \varepsilon \theta)(\partial \mathcal{S})-J_V(\partial \mathcal{S})}{\varepsilon} = \int_{\partial \mathcal{S}} G(x) \vec{\theta} \cdot \vec{n} \, dS
+++++
+where stem:[G(x)] is called the shape gradient of stem:[J_V]. To get this shape gradient, one has to compute 
+the adjoint of the optimisation problem. The adjoint states stem:[(v,q)] are solution 
+of the following Stokes problem
+
+[stem]
+++++
+\begin{equation*}
+	\begin{aligned}
+		-\mu \Delta v + \nabla q &= 0 \quad &\text{in $\mathcal{F}$}\\
+		\nabla \cdot v &= 0 \quad &\text{in $\mathcal{F}$}\\
+		v &= V \quad &\text{on $\partial \mathcal{S}$}\\
+		v &= 0 \quad &\text{on $\partial \mathcal{F} \setminus \partial \mathcal{S}$}
+	\end{aligned}
+\end{equation*}
+++++
+
+It can be proven that the shape gradient is then given by: 
+
+[stem]
+++++
+G = 2 \mu D(u) : D(v),
+++++
+where stem:[D(u) = \frac{1}{2} (\nabla u + \nabla u^T)] the rate-of-strain tensor.
+
+Finally, using a variational method, the descent direction stem:[\theta] is 
+solution of the Laplace equation: 
+
+[stem]
+++++
+\begin{aligned}
+	-\Delta \theta &= 0 \quad &\text{in $\mathcal{F}$}\\
+	\theta &= 0 \quad &\text{on $\partial \mathcal{F} \setminus \partial \mathcal{S}$}\\
+	\nabla \theta \cdot \vec{n} &= -G \vec{n} \quad &\text{on $\partial \mathcal{S}$}
+\end{aligned}
+++++
+
+The resulted descent direction decreases the objective function and leads to shape variations that are small enough to avoid numerical instabilities. 
+
+In order to numerically apply the volume constraint, the augmented Lagrangian method is used. This method transforms the constrained optimisation problem into several unconstrained problems that penalizes large derivations from stem:[|\mathcal{S}| = |\mathcal{S}_0|]: 
+
+[stem]
+++++
+\min_{\partial \mathcal{S}} \mathcal{L}(\partial \mathcal{S}), \quad \mathcal{L}(\partial \mathcal{S}) = J_V(\partial \mathcal{S}) + l (|\mathcal{S}|-|\mathcal{S^0}|) + \frac{b}{2}(|\mathcal{S}|-|\mathcal{S^0}|)^2.
+++++
+
+The augmented Lagrangian parameters are updated as follows:
+[stem]
+++++
+l^{n} = l^{n-1} - b^{n-1}(|\mathcal{S^{n-1}}|-|\mathcal{S^0}|) \quad \text{and} \quad b^n = \alpha b^{n-1} \quad \text{if} \quad b < b_{\mbox{target}}.
+++++
+
+stem:[b^n] remains constant once the target value stem:[b_{\mbox{target}}] is reached.
+
+== Algorithm
+
+Since the deformation of the shape remains small, the optimal solid surface is obtained 
+after several iterations of the optimisation problem. The different steps of the algorithm are given by: 
+
+++++
+<pre id="algo" style="display:hidden;">
+\begin{algorithm}
+    \caption{Shape optimisation algorithm}
+    \begin{algorithmic}
+      \FUNCTION{ShapeOptimisation}{}
+    
+        \STATE \textbf{Initialization:} 
+        \STATE $\partial \mathcal{S^0}$ : initial shape.
+        \STATE $l^0,b^0$ :  augmented Lagrangian parameters.
+
+        \STATE \textbf{Main loop:} 
+        \WHILE{$||\theta^n|| \geq \epsilon$}
+    
+          \STATE - Solve the primal problem to get $(u^n,p^n)$.
+          \STATE - Solve the adjoint problem to get $(v^n,q^n)$.
+          \STATE - Compute the shape gradient $G^n$ of $J_V$  : $G^n =  2 \mu D(u) : D(v)$.
+          \STATE - Compute the shape gradient $\phi^n$ of $\mathcal{L}$ : $\phi^n = \frac{G^n}{G^0} - \frac{l^n}{|\mathcal{S^0}|} + b^n \frac{(|\mathcal{S^n}| - |\mathcal{S^0}|)}{|\mathcal{S^0}|^2}$.
+          \STATE - Compute the descent direction $\theta^n$.
+          \STATE - Determine a descent step $\tau^n$ using Armijo rule.
+          \STATE - Move the mesh vertices: $x^{n+1} = x^n + \tau^n \theta^n x^n$.
+          \STATE - If the quality of the mesh is low, then apply a remesh.
+          \STATE - Update the augmented Lagrangian parameters.
+    
+        \ENDWHILE
+    
+        \RETURN  $\partial \mathcal{S^n}$,
+      \ENDFUNCTION
+    \end{algorithmic}
+\end{algorithm}
+</pre>
+++++
+
+== Implementation with {feelpp}
+
+== Results

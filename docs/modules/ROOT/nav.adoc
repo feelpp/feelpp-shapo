@@ -5,4 +5,5 @@
 ** xref:vscode.adoc[vscode integration]
 ** xref:githubactions.adoc[Github Actions]
 ** xref:rename.adoc[Renaminge the project]
+* xref:optimisationStokes.adoc[Shape optimisation in Stokes flow]
 
