@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Github Actions :: Feel++ ShapO // Docs</title>
-    <link rel="canonical" href="https://feelpp.github.io/feelpp-shapo/shapo/githubactions.html">
+    <title>Shape optimisation in Stokes flow :: Feel++ ShapO // Docs</title>
+    <link rel="canonical" href="https://feelpp.github.io/feelpp-shapo/shapo/optimisationStokes.html">
     <meta name="generator" content="Antora 3.1.2">
     <link rel="stylesheet" href="../_/css/site.css">
 <link rel="icon" href="../_/img/favicon.ico" type="image/x-icon">    
@@ -92,6 +92,9 @@ MathJax.Hub.Config({
 <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.css" integrity="sha384-TEMocfGvRuD1rIAacqrknm5BQZ7W7uWitoih+jMNFXQIbNl16bO8OZmylH/Vi/Ei" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.js" integrity="sha384-jmxIlussZWB7qCuB+PgKG1uLjjxbVVIayPJwi6cG6Zb4YKq0JIw+OMnkkEC7kYCq" crossorigin="anonymous"></script>-->
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.js">
+  </script>
 <script>var uiRootPath = '../_'</script>
 
   </head>
@@ -181,7 +184,7 @@ MathJax.Hub.Config({
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vscode.html">vscode integration</a>
   </li>
-  <li class="nav-item is-current-page" data-depth="2">
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="githubactions.html">Github Actions</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -189,7 +192,7 @@ MathJax.Hub.Config({
   </li>
 </ul>
   </li>
-  <li class="nav-item" data-depth="1">
+  <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="optimisationStokes.html">Shape optimisation in Stokes flow</a>
   </li>
 </ul>
@@ -223,8 +226,7 @@ MathJax.Hub.Config({
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="index.html">Feel++ ShapO</a></li>
-    <li>Feel++ project</li>
-    <li><a href="githubactions.html">Github Actions</a></li>
+    <li><a href="optimisationStokes.html">Shape optimisation in Stokes flow</a></li>
   </ul>
 </nav>
 
@@ -251,7 +253,7 @@ MathJax.Hub.Config({
 
     <a href="https://github.com/feelpp/feelpp-shapo">Open repository <i class="fab fa-github"></i></a>
     
-  <a href="https://github.com/feelpp/feelpp-shapo/edit/master/docs/modules/ROOT/pages/githubactions.adoc">Edit this Page <i class="fas fa-edit"></i></a>
+  <a href="https://github.com/feelpp/feelpp-shapo/edit/master/docs/modules/ROOT/pages/optimisationStokes.adoc">Edit this Page <i class="fas fa-edit"></i></a>
 
     <a href="https://github.com/feelpp/book.feelpp.org/issues/new">Open issue <i class="fas fa-lightbulb"></i></a>
 
@@ -281,19 +283,301 @@ title="Fullscreen mode"
 </aside>
 
 <article class="doc">
-<h1 class="page">Github Actions</h1>
+<h1 class="page">Shape optimisation in Stokes flow</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_problem_statement">1. Problem statement</a></li>
+<li><a href="#_optimisation_framework">2. Optimisation framework</a></li>
+<li><a href="#_algorithm">3. Algorithm</a></li>
+<li><a href="#_implementation_with_feel">4. Implementation with Feel++</a></li>
+<li><a href="#_results">5. Results</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
 <div class="paragraph">
-<p>Github actions are setup to</p>
+<p>The purpose of this section is to implement the shape optimisation algorithm
+described in the article <em>Shapes optimising grand resistance tensor entries for a rigid body in a Stokes flow</em>.
+We will first state the problem, then we will detail the optimisation framework and
+give the different steps of its algorithm.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_problem_statement"><a class="anchor" href="#_problem_statement"></a>1. Problem statement</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We consider a solid \(\mathcal{S}\) placed in a domain
+\(\mathcal{F}=\mathbb{R}^3\setminus \mathcal{S}\), filled with
+an incompressible fluid at low Reynolds number. A no-slip condition is
+imposed on the domain boundary \(\partial \mathcal{F}\).
+The fluid velocity \(u\) and pressure \(p\) are described by the Stokes equations:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\begin{equation*}
+	\begin{aligned}
+		-\mu \Delta u + \nabla p &amp;= 0 \quad &amp;\text{in $\mathcal{F}$}\\
+		\nabla \cdot u &amp;= 0 \quad &amp;\text{in $\mathcal{F}$}\\
+		u &amp;= U \quad &amp;\text{on $\partial \mathcal{S}$}\\
+		u &amp;= 0 \quad &amp;\text{on $\partial \mathcal{F} \setminus \partial \mathcal{S}$}
+	\end{aligned}
+\end{equation*}\]
+</div>
+</div>
+<div class="paragraph">
+<p>where \(U\) describes the motion of the solid and \(\mu\) the fluid viscosity.</p>
+</div>
+<div class="paragraph">
+<p>The motion of the solid is characterized by its translational and angular velocity.
+These two quantities are partially influenced by the fluid forces and torques acting on the solid, thus by the hydrodynamic resistance.
+Considering a Stokes flow, the relation between the
+solid motion and the hydrodynamic resistance is linear and expressed by the <em>grand resistance tensor</em>.
+This latter is defined by nine tensors. We focus on four of these tensors:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>build the documentation using Antora and upload them to docs.feelpp.org[Feel++ docs] upon any change in the repo.</p>
+<p>\(K\) :  coupling between hydrodynamical force and translational velocity.</p>
 </li>
 <li>
-<p>build a sample Feel++ code</p>
+<p>\(C\) :  coupling between hydrodynamical force and rotational velocity.</p>
+</li>
+<li>
+<p>\(\bar{C}\) :  coupling between hydrodynamical torque and translational velocity.</p>
+</li>
+<li>
+<p>\(Q\) :  coupling between hydrodynamical torque and rotational velocity.</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>Considering a fixed reference frame, these tensors only depend on the solid shape.
+The aim is to determine the optimal solid surface \(\partial \mathcal{S}\) that minimizes or maximizes the
+hydrodynamic resistance parameters, hence the tensors \(K,C,\bar{C},Q\).</p>
+</div>
+<div class="paragraph">
+<p>The coefficients of these four tensors
+can be defined by the following surface integral:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[J_V(\partial \mathcal{S}) = - \int_{\partial \mathcal{S}} \sigma (u,p) \vec{n} \cdot V dS\]
+</div>
+</div>
+<div class="paragraph">
+<p>where \(\sigma (u,p) = - p I + \mu ( \nabla u + \nabla u^T)\) the stress tensor and
+the values for \(U\) and \(V\) are fixed as described in the table:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(J_V\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(U\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(V\)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(K_{i,j}\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_j\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_i\)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(C_{i,j}\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_j \times x\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_i\)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(\bar{C}_{i,j}\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_j\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_i \times x\)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(Q_{i,j}\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_j \times x\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(e_i \times x\)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_optimisation_framework"><a class="anchor" href="#_optimisation_framework"></a>2. Optimisation framework</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The surface integral \(J_V\) represents the objective function of the
+optimisation problem, given by:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\min_{|\mathcal{S}| = |\mathcal{S_0}|} J_V(\partial \mathcal{S}),\]
+</div>
+</div>
+<div class="paragraph">
+<p>where the constraint \(|\mathcal{S}| = |\mathcal{S_0}|\) imposes that the volume of
+the solid remains constant.</p>
+</div>
+<div class="paragraph">
+<p>To deform the solid, one defines a vector field \(\theta : \mathbb{R}^3 \mapsto \mathbb{R}^3\). The new shape is then given by</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\partial \mathcal{S_{\theta}} = (I + \theta)\partial \mathcal{S}.\]
+</div>
+</div>
+<div class="paragraph">
+<p>For our optimisation problem, the deformation vector \(\theta\) gives the
+descent direction and has to ensure three conditions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A smooth deformation, i.e. a small variation of the shape.</p>
+</li>
+<li>
+<p>The constraint on the volume.</p>
+</li>
+<li>
+<p>The decrease of the objective function:</p>
+</li>
+</ul>
+</div>
+<div class="stemblock">
+<div class="content">
+\[J_V(\partial \mathcal{S_{\theta}}) \leq J_V(\partial \mathcal{S}).\]
+</div>
+</div>
+<div class="paragraph">
+<p>The notion of shape derivative is used to determine such a descent direction.
+The shape derivative \(&lt; d J( \partial \mathcal{S}),\theta&gt;\) defines
+the variation of the objective function for a small deformation of the solid surface.
+One has:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[ &lt; d J_V( \partial \mathcal{S}),\theta&gt; = \lim_{\varepsilon \to 0} \frac{J_V(I + \varepsilon \theta)(\partial \mathcal{S})-J_V(\partial \mathcal{S})}{\varepsilon} = \int_{\partial \mathcal{S}} G(x) \vec{\theta} \cdot \vec{n} \, dS\]
+</div>
+</div>
+<div class="paragraph">
+<p>where \(G(x)\) is called the shape gradient of \(J_V\). To get this shape gradient, one has to compute
+the adjoint of the optimisation problem. The adjoint states \((v,q)\) are solution
+of the following Stokes problem</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\begin{equation*}
+	\begin{aligned}
+		-\mu \Delta v + \nabla q &amp;= 0 \quad &amp;\text{in $\mathcal{F}$}\\
+		\nabla \cdot v &amp;= 0 \quad &amp;\text{in $\mathcal{F}$}\\
+		v &amp;= V \quad &amp;\text{on $\partial \mathcal{S}$}\\
+		v &amp;= 0 \quad &amp;\text{on $\partial \mathcal{F} \setminus \partial \mathcal{S}$}
+	\end{aligned}
+\end{equation*}\]
+</div>
+</div>
+<div class="paragraph">
+<p>It can be proven that the shape gradient is then given by:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[G = 2 \mu D(u) : D(v),\]
+</div>
+</div>
+<div class="paragraph">
+<p>where \(D(u) = \frac{1}{2} (\nabla u + \nabla u^T)\) the rate-of-strain tensor.</p>
+</div>
+<div class="paragraph">
+<p>Finally, using a variational method, the descent direction \(\theta\) is
+solution of the Laplace equation:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\begin{aligned}
+	-\Delta \theta &amp;= 0 \quad &amp;\text{in $\mathcal{F}$}\\
+	\theta &amp;= 0 \quad &amp;\text{on $\partial \mathcal{F} \setminus \partial \mathcal{S}$}\\
+	\nabla \theta \cdot \vec{n} &amp;= -G \vec{n} \quad &amp;\text{on $\partial \mathcal{S}$}
+\end{aligned}\]
+</div>
+</div>
+<div class="paragraph">
+<p>The resulted descent direction decreases the objective function and leads to shape variations that are small enough to avoid numerical instabilities.</p>
+</div>
+<div class="paragraph">
+<p>In order to numerically apply the volume constraint, the augmented Lagrangian method is used. This method transforms the constrained optimisation problem into several unconstrained problems that penalizes large derivations from \(|\mathcal{S}| = |\mathcal{S}_0|\):</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\min_{\partial \mathcal{S}} \mathcal{L}(\partial \mathcal{S}), \quad \mathcal{L}(\partial \mathcal{S}) = J_V(\partial \mathcal{S}) + l (|\mathcal{S}|-|\mathcal{S^0}|) + \frac{b}{2}(|\mathcal{S}|-|\mathcal{S^0}|)^2.\]
+</div>
+</div>
+<div class="paragraph">
+<p>The augmented Lagrangian parameters are updated as follows:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[l^{n} = l^{n-1} - b^{n-1}(|\mathcal{S^{n-1}}|-|\mathcal{S^0}|) \quad \text{and} \quad b^n = \alpha b^{n-1} \quad \text{if} \quad b &lt; b_{\mbox{target}}.\]
+</div>
+</div>
+<div class="paragraph">
+<p>\(b^n\) remains constant once the target value \(b_{\mbox{target}}\) is reached.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_algorithm"><a class="anchor" href="#_algorithm"></a>3. Algorithm</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Since the deformation of the shape remains small, the optimal solid surface is obtained
+after several iterations of the optimisation problem. The different steps of the algorithm are given by:</p>
+</div>
+<pre id="algo" style="display:hidden;">
+\begin{algorithm}
+    \caption{Shape optimisation algorithm}
+    \begin{algorithmic}
+      \FUNCTION{ShapeOptimisation}{}
+
+        \STATE \textbf{Initialization:}
+        \STATE $\partial \mathcal{S^0}$ : initial shape.
+        \STATE $l^0,b^0$ :  augmented Lagrangian parameters.
+
+        \STATE \textbf{Main loop:}
+        \WHILE{$||\theta^n|| \geq \epsilon$}
+
+          \STATE - Solve the primal problem to get $(u^n,p^n)$.
+          \STATE - Solve the adjoint problem to get $(v^n,q^n)$.
+          \STATE - Compute the shape gradient $G^n$ of $J_V$  : $G^n =  2 \mu D(u) : D(v)$.
+          \STATE - Compute the shape gradient $\phi^n$ of $\mathcal{L}$ : $\phi^n = \frac{G^n}{G^0} - \frac{l^n}{|\mathcal{S^0}|} + b^n \frac{(|\mathcal{S^n}| - |\mathcal{S^0}|)}{|\mathcal{S^0}|^2}$.
+          \STATE - Compute the descent direction $\theta^n$.
+          \STATE - Determine a descent step $\tau^n$ using Armijo rule.
+          \STATE - Move the mesh vertices: $x^{n+1} = x^n + \tau^n \theta^n x^n$.
+          \STATE - If the quality of the mesh is low, then apply a remesh.
+          \STATE - Update the augmented Lagrangian parameters.
+
+        \ENDWHILE
+
+        \RETURN  $\partial \mathcal{S^n}$,
+      \ENDFUNCTION
+    \end{algorithmic}
+\end{algorithm}
+</pre>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation_with_feel"><a class="anchor" href="#_implementation_with_feel"></a>4. Implementation with Feel++</h2>
+<div class="sectionbody">
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="_results"><a class="anchor" href="#_results"></a>5. Results</h2>
+<div class="sectionbody">
+
+</div>
 </div>
 </article>
   </div>
@@ -373,6 +657,12 @@ title="Fullscreen mode"
 <script async src="../_/js/vendor/highlight.js"></script>
 
 
+<script type="text/javascript">
+const codes = JSON.parse('["algo"]');
+codes.forEach((item) => {
+ pseudocode.renderElement(document.getElementById(item));
+});
+</script>
 
 <script type="text/javascript">
 function toggleFullScreen() {
