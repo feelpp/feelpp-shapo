@@ -131,7 +131,7 @@ jobs:
         password: ${{ secrets.CR_PAT }}
     - 
       name: Build container image
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v4
       with: 
         context: artifacts
         push: ${{ github.event_name != 'pull_request' }}
