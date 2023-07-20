@@ -1,0 +1,1956 @@
+= Geometric Shape Optimisation
+:stem: latexmath
+:toc:
+
+This introduction to geometric shape optimisation is based on Lucas Palazzolo's course. For more details, see <<internship_Palazzolo>>.
+
+Shape optimization is a field of study that focuses on finding the best possible shape for a given object or system in order to optimize certain performance criteria or objectives which are typically a function of differential equations defined on the shape itself. The optimisation problem can be written as 
+
+[stem]
+++++
+\begin{equation*}
+    \inf_{\Omega \in \Omega_{ad}}J(\Omega, u(\Omega))
+\end{equation*}
+++++
+with stem:[u] solution of a PDE defined on the domain stem:[\Omega]. 
+
+Geometric shape optimization focuses on directly modifying the shape of an object to achieve the desired objectives via a non-parametric deformation field stem:[\theta]. It involves manipulating the geometry of the object to improve its performance. We consider a reference domain stem:[\Omega_0], which we assume to be a regular bounded open subset of stem:[\mathbb{R}^N]. Let stem:[\partial \Omega_0] the boundary of this domain. We denote with stem:[\theta] the deformation applied to the initial domain to get the new domain stem:[\Omega], i.e.
+
+[stem]
+++++
+\begin{equation*}
+    \Omega = (\textrm{Id} + \theta)(\Omega_0).
+\end{equation*}
+++++
+
+This deformation is illustrated in the following figure where a deformation field is applied to a reference domain.
+
+.Shape optimisation principle : the stem:[\Omega_0] domain is deformed according to a deformation field stem:[\theta] such that the new stem:[\Omega] domain is given by stem:[\Omega = (\textrm{Id} + \theta)(\Omega_0)].
+image::shape_opti_principle.png[width=700]
+
+In the pursuit of finding shape derivative of the cost function, a well-known method called Cea's method, developed by Cea in <<cea_conception_1986>>, proves to be both simple and effective. However, it should be noted that Cea's method is considered a _formal_ approach as it relies on certain assumptions regarding the regularity of the problem's data. We look at the numerical solution of these two problems using two numerical methods : the gradient descent <<allaire_conception_2006>> and the null space gradient flow <<feppon_shape_2019>>. 
+
+The gradient descent method is a classic method for solving geometric shape optimisation problems. In this method, an initial shape is iteratively modified by moving in the direction of the negative gradient of the objective function. The process continues until convergence to an optimal shape is achieved. The null space gradient flow method involves finding the shape that minimizes the objective function while satisfying a set of constraints. It utilizes the notion of null space and range space directions to guide the shape optimization process.
+
+== Introduction
+
+=== Definitions
+
+As presented in <<allaire_conception_2006>>, in order to describe the set of admissible forms, we need to introduce the following set of diffeomorphisms.
+
+.Definition : Deformation of the identity
+[.def#setT]
+****
+We define a space of diffeomorphisms on stem:[\mathbb{R}^N] (which can be seen as a deformation of the identity) by
+[stem]
+++++
+\begin{equation*}
+\mathcal{T} = \left\{ T \mid (T-\textrm{Id})\in W^{1,\infty}(\Omega, \mathbb{R}^N) \text{ and } (T^{-1}-\textrm{Id})\in W^{1,\infty}(\Omega, \mathbb{R}^N)  \right\}.
+\end{equation*}
+++++
+****
+
+Now we can clarify the admissible shapes obtained by deformation of stem:[\Omega_0], that are defined by the following set.
+
+.Definition : The set of admissible shapes
+[.def]
+****
+The set of _admissible shapes_ obtained by deformation of stem:[\Omega_0] is given by 
+[stem]
+++++
+\begin{equation*}
+    C(\Omega_0)=\left\{\Omega \subset \mathbb{R}^N \mid \exists T \in \mathcal{T}, \quad \Omega=T(\Omega_0) \right\},
+\end{equation*}
+++++
+where stem:[\mathcal{T}] is defined by <<setT>>.
+****
+
+
+In view of the above definitions, it is natural to consider the vector field stem:[\theta] such as
+
+[stem]
+++++
+\begin{equation*}
+    T = \textrm{Id} + \theta \qquad \text{with} \qquad \theta \in W^{1,\infty}(\Omega, \mathbb{R}^N) ~ \text{and} ~ T \in \mathcal{T}.
+\end{equation*}
+++++
+
+In order to be able to define a differentiability notion in stem:[\Omega_0] with respect to stem:[\theta], we need the following lemma which guarantees that if stem:[\theta] is small enough then stem:[T= \textrm{Id} + \theta] is indeed a diffeomorphism which belongs to stem:[\mathcal{T}].
+
+.Lemma 1
+[.lem]
+****
+For all stem:[\theta \in W^{1,\infty}(\Omega, \mathbb{R}^N)] that verify stem:[\|\theta\|_{W^{1,\infty}(\Omega, \mathbb{R}^N)}<1], the map stem:[T=\textrm{Id}  +\theta] is a bijection of stem:[\mathbb{R}^N] that belongs to stem:[\mathcal{T}] defined by <<setT>>.
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<allaire_conception_2006>>, Lemma 6.13]
+====
+
+
+All that remains is to define the notion of differentiability in relation to the domain that we call shape derivation or differentiability with respect to the domain. The following definition applies to differentiability in the Fréchet sense as well as in the Gâteaux sense.
+
+.Definition : Differentiability with respect to the domain
+[.def#difdomaine]
+****
+Let stem:[J(\Omega)] a map such that stem:[J : C(\Omega_0) \to \mathbb{R}]. stem:[J] is said to be differentiable with respect to the domain on stem:[\Omega_0] if 
+[stem]
+++++
+\begin{equation*}
+    \theta \mapsto J\left((\textrm{Id} +\theta)(\Omega_0)\right)
+\end{equation*}
+++++
+is differentiable in 0 in the Banach space stem:[W^{1,\infty}(\Omega, \mathbb{R}^N).]
+****
+
+Let us introduce some notation to define the matrix scalar product.
+
+.Definition : Matrix scalar product
+[.def]
+****
+Let stem:[A] and stem:[B] be two real matrices of dimension stem:[N]. We define the scalar product of two matrices as 
+[stem]
+++++
+\begin{equation*}
+    A : B = tr(A^TB).
+\end{equation*}
+++++
+and we will note thereafter stem:[\|\cdot \|] the associated norm.
+****
+
+
+.Definition 
+[.def]
+****
+We denote
+[stem]
+++++
+\begin{equation*}
+    H^{k}_{\Gamma}(\Omega) = \left\{v \in H^{k}(\Omega) \mid v|_{\Gamma} = 0 \right\},
+\end{equation*}
+++++
+the set of functions belonging to stem:[H^{k}(\Omega)] and which vanish on stem:[\Gamma]. 
+****
+
+=== Derivation of integrals 
+
+In this subsection, <<difdomaine>> of differentiability with respect to the domain will be applied to volume or surface integrals. The paragraph will be brief, for more details we point the reader to <<allaire_conception_2006>>. We denote stem:[n] as the unit normal pointing outwards to the domain.
+
+.Proposition 1
+[.prop#Prop:diffJOmega]
+****
+Let stem:[\Omega_0] be a regular bounded open subset of stem:[\mathbb{R}^N]. Let stem:[f \in W^{1,1}(\mathbb{R}^N)] and stem:[J] be the map of stem:[C(\Omega_0)] in stem:[\mathbb{R}] defined by 
+[stem]
+++++
+\begin{equation*}
+    J(\Omega)=\int_{\Omega}f.
+\end{equation*}
+++++
+Then stem:[J] is differentiable in stem:[\Omega] and for all stem:[\theta \in W^{1,\infty}(\Omega,\mathbb{R}^N)] we have
+[stem]
+++++
+\begin{equation*}
+    DJ(\Omega)(\theta)=\int_{\Omega}\nabla \cdot \left(\theta f\right) = \int_{\partial \Omega}\theta\cdot n f.
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<allaire_conception_2006>>, Proposition 6.22]
+====
+
+.Propostion 2
+[.prop#Prop:diffJpartialOmega]
+****
+Let stem:[\Omega_0] be a regular bounded open subset of stem:[\mathbb{R}^N]. Let stem:[f \in W^{2,1}(\mathbb{R}^N)] and stem:[J] be the map of stem:[C(\Omega_0)] in stem:[\mathbb{R}] defined by 
+[stem]
+++++
+\begin{equation*}
+    J(\Omega)=\int_{\partial \Omega}f.
+\end{equation*} 
+++++
+Then stem:[J] is differentiable in stem:[\Omega] and for all stem:[\theta \in C^1(\mathbb{R}^N,\mathbb{R}^N)] we have 
+[stem]
+++++
+\begin{equation*}
+DJ(\Omega)(\theta)=\int_{\partial \Omega}\left(\nabla f \cdot \theta + f(\nabla \cdot \theta)-f(\nabla\theta n \cdot n)\right) = \int_{\partial \Omega}\theta \cdot n \left(\frac{\partial f}{\partial n}+(\nabla \cdot n)f\right).
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<allaire_conception_2006>>, Proposition 6.24 & Lemma 6.25]
+====
+
+
+[NOTE]
+====
+Note that we need stem:[\theta \in C^1(\mathbb{R}^N,\mathbb{R}^N)]. Indeed, we need to define the trace of stem:[\nabla \theta] on stem:[\partial \Omega], and therefore the hypothesis stem:[\theta \in W^{1,\infty}(\Omega,\mathbb{R}^N)] is not sufficient.
+====
+
+
+=== Derivation of domain-dependent functions and equations: Cea's method
+
+In the following, we consider a cost function stem:[J] (depending on a domain stem:[\Omega]) which we wish to minimize (or maximize) by finding the shape of the optimal domain. Additionally, we assume that stem:[J] relies on a variable stem:[u], which is a solution to a specific differential equation defined on the domain stem:[\Omega]. Consequently, it becomes necessary to differentiate the cost function and the differential equation with respect to the domain.
+
+A simple and efficient method for calculating values is the Cea's method developed in <<cea_conception_1986>>. This method also allows us to "guess" the definitions of the adjoint state stem:[p]. However, it is important to note that this method is _formal_, as it relies on certain assumptions about the regularities of the problem's data, particularly concerning the solution stem:[u]. For more rigorous calculations, the use of Eulerian and Lagrangian derivatives, as described in <<allaire_conception_2006>>, becomes necessary. This method incorporates the concepts of the primal problem or state problem, the dual problem or adjoint problem, and the Lagrangian. The problem is presented as follows.
+
+*Cost Function :* Let stem:[J] be a (domain-dependent) cost function that we seek to minimize (or maximize) such that 
+
+[stem]
+++++
+\begin{equation*}
+ \begin{array}{rcl}
+J:C(\Omega_0)&\to& \mathbb{R}\\
+\Omega &\mapsto &J(\Omega, u(\Omega)),
+\end{array}
+\end{equation*}
+++++
+where stem:[J] _depends_ of the solution stem:[u] of a differential equation. For ease of reading, we omit the stem:[u] in the notation of the cost function. We seek to solve the following problem
+
+[stem]
+++++
+\begin{equation*}
+    \inf_{\Omega \in \Omega_{ad}} J(\Omega),
+\end{equation*}
+++++
+where stem:[\Omega_{ad}] corresponds to the admissible domains.
+
+*Primal Equation :* Let stem:[u] be the solution of a problem, called a state problem or primal problem. Let stem:[E] be the map governing the variational formulation associated with the primal problem such that 
+
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+E:V\times V&\to& \mathbb{R}\\
+(v,q) &\mapsto &E(v,q),
+\end{array}
+\end{equation*}
+++++
+where stem:[V] is, in our case, a Sobolev space. Then, by definition of the weak formulation, for all stem:[q \in V] we have 
+
+[stem]
+++++
+\begin{equation*}
+    E(u,q)=0,
+\end{equation*}
+++++
+with stem:[u] the solution of the primal problem.
+
+*The Lagrangian :* The Cea's method is based on duality. For this purpose, we consider the primal equation as a constraint and introduce the following Lagrangian.
+
+.Definition : Lagrangian without Dirichlet condition
+[.def]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+\mathcal{L}:C(\Omega_0)\times V\times V&\to& \mathbb{R}\\
+(\Omega, v,q) &\mapsto &J(\Omega) + E(v,q),
+\end{array}
+\end{equation*}
+++++
+which is the sum of the objective function and the variational formulation of the primal equation.
+****
+
+[NOTE]
+====
+We must not forget that stem:[J] also depends on stem:[v] ! It is absolutely important for the following to consider that the three variables are independent of each other. Thus, the space stem:[V] must be independent of the domain stem:[\Omega]. 
+====
+
+When the state problem has a Dirichlet condition, we must add another Lagrange multiplier, as explained in <<allaire_conception_2006>>.
+
+.Deifnition : Lagrangian with Dirichlet condition
+[.def]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+\mathcal{L}:C(\Omega_0)\times V\times V\times V&\to& \mathbb{R}\\
+(\Omega, v,q, \psi) &\mapsto &J(\Omega) + E(v,q) + F(v,\psi),
+\end{array}
+\end{equation*}
+++++
+where stem:[F] represents the constraint associated with the Dirichlet condition.
+****
+
+To simplify the following, we will assume that stem:[E] and stem:[F] are bilinear. We then quickly obtain the different equations and the gradient of stem:[J] (assuming all the necessary regularities). 
+
+
+.Proposition : Primal problem thanks to the Lagrangian
+[.prop#primalderivative]
+****
+For all stem:[(q,\phi) \in V^2]
+
+[stem]
+++++
+\begin{equation}
+    \left\langle\frac{\partial \mathcal{L}}{\partial q}(\Omega, u, q),\phi \right\rangle = 0,
+\end{equation}
+++++
+with stem:[u] solution of the primal problem, i.e. for all stem:[\phi \in V]
+
+[stem]
+++++
+\begin{equation}
+    E(u,\phi) = 0,
+\end{equation}
+++++
+by bilinearity of stem:[E]. This results in stem:[u] being the solution to the variational formulation of the primal problem.
+****
+
+
+
+.Proposition : Dual problem thanks to the Lagrangian
+[.prop#dualderivative]
+****
+For all stem:[(v,\phi)\in V^2], we have 
+[stem]
+++++
+\begin{equation}
+    \left\langle \frac{\partial \mathcal{L}}{\partial v}(\Omega, v, p),\phi \right\rangle = 0,
+\end{equation}
+++++
+with stem:[p] solution of the dual problem, i.e. for all stem:[\phi \in V]
+
+[stem]
+++++
+\begin{equation}
+    E(\phi, p)+ \frac{\partial J}{\partial v}(\Omega)(\phi) = 0,
+\end{equation}
+++++
+by bilinearity of stem:[E] and by the fact that stem:[J] also depends on stem:[v]. This results in stem:[p] being solution to the weak formulation of the dual problem. 
+****
+
+.Proposition : Differential of the cost fucntion thanks to the Lagrangian
+[.prop#lagmethod:gradientJ]
+****
+For all stem:[\theta] in V, we have
+[stem]
+++++
+\begin{equation}
+    DJ(\Omega)(\theta)=\frac{\partial \mathcal{L}}{\partial \Omega}(\Omega, u(\Omega), p(\Omega))(\theta).
+\end{equation}
+++++
+with stem:[u] and stem:[p] solution of the primal and dual problem.
+****
+
+.Proof
+[%collapsible.proof]
+====
+Since stem:[u(\Omega)] is a solution of the primal problem and thus vanishes the weak formulation, we have 
+
+[stem]
+++++
+\begin{equation*}
+    \mathcal{L}(\Omega, u(\Omega), q) = J(\Omega) \qquad \forall q\in V.
+\end{equation*}
+++++
+
+The key point is that this is valid for all stem:[q] in stem:[V]. Thus, we can take stem:[q] in particular in the following as the solution of the dual problem (similarly for Lagrange multipliers in the case of Dirichlet conditions). To emphasize the dependence of the solution stem:[u] on the domain, we write stem:[u(\Omega)]. By independence of the variable stem:[q] with respect to stem:[\Omega] and deriving this relation using chain rule (always assuming that we have the necessary regularities to do so), we get
+
+[stem]
+++++
+\begin{equation*}
+    DJ(\Omega)(\theta) = \frac{\partial \mathcal{L}}{\partial \Omega}\left(\Omega, u(\Omega), q\right)(\theta) + \left\langle \frac{\partial \mathcal{L}}{\partial v}\left(\Omega, u(\Omega), q\right), u'(\Omega)(\theta) \right\rangle.
+\end{equation*}
+++++
+By taking stem:[q=p(\Omega)] solution of the dual problem, the last term vanishes. Finally, we come to
+
+[stem]
+++++
+\begin{equation}
+    DJ(\Omega)(\theta)=\frac{\partial \mathcal{L}}{\partial \Omega}(\Omega, u(\Omega), p(\Omega))(\theta).
+\end{equation}
+++++
+====
+
+
+== Solution methods
+
+To minimize the cost function stem:[J(\Omega)], we differentiate according to the variable stem:[\theta] which parametrizes the form stem:[\Omega=(\textrm{Id}+\theta)(\Omega_0)]. In the various problems we study, certain boundaries will be assumed to be fixed, i.e. non-deformable, and noted stem:[\Gamma_{fixed}]. We denote stem:[\Gamma] the deformable part of stem:[\partial \Omega], thus
+
+[stem]
+++++
+\begin{equation*}
+    \partial \Omega = \Gamma \cup \Gamma_{fixed}.
+\end{equation*}
+++++
+
+In <<allaire_conception_2006>> a method is quickly defined for all cost functions whose derivative can be written as follows
+
+[stem]
+++++
+\begin{equation}\label{eq:DJ}
+ DJ(\Omega)(\theta)=\int_{\Gamma} \theta \cdot n G(\Omega), 
+\end{equation} 
+++++
+where stem:[G(\Omega)] is a function (which depends of the state and of the adjoint) which is called the shape gradient. In the following, we will assume that we are studying an optimisation problem with an equality constraint in order to preserve the volume of the domain. 
+
+.Definition : Set of admissible domains
+[.def#eq:Omegad]
+****
+The set of admissible domains, stem:[\Omega_{ad}], is given by
+[stem]
+++++
+\begin{equation}\label{eq:Omegad}
+\Omega_{ad}=\left\{\Omega \in C(\Omega_0) \mid \Gamma_{fixed}  \subset \partial \Omega, ~ g(\Omega)= 0\right\}
+\end{equation}
+++++
+with 
+stem:[g] the equality constraint for the volume conservation, written as 
+
+[stem]
+++++
+\begin{equation*}
+    \begin{array}{rcl}
+            g:V&\to& \mathbb{R}\\
+            \theta &\mapsto &|(\textrm{Id}  + \theta)(\Omega)|-|\Omega_0|.
+            \end{array}
+\end{equation*}
+++++
+****
+
+[NOTE]
+====
+By abuse of notation, the most of the time we write stem:[g(\Omega)] instead of stem:[g(\theta)]. 
+====
+
+The non-deformation constraints the boundaries stem:[\Gamma_{fixed}] are taken into account by simply imposing 
+
+[stem]
+++++
+\begin{equation*}
+\theta=0 \qquad \text{on} \qquad \Gamma_{fixed},  
+\end{equation*}
+++++
+i.e. we impose a null displacement field at these boundaries.
+
+
+.Proposition : Differential of the volume constraint
+[.prop#eq:Dg]
+****
+The differential of stem:[g], definined in <<eq:Omegad>>, is given by
+[stem]
+++++
+\begin{equation*}
+    \begin{array}{rcl}
+            Dg(\Omega):V&\to& \mathbb{R}\\
+            \theta &\mapsto &\int_{\Gamma}\theta \cdot n.
+            \end{array}
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+By using <<Prop:diffJOmega>> on stem:[g].
+====
+
+
+Two methods will be presented to solve this type of problems: gradient descent and Null Space Gradient Flow.
+
+=== Solution by a gradient descent method
+
+The gradient descent (GD) method is an optimization technique used to minimize a function iteratively. By taking a new form, stem:[\Omega_t], such as 
+
+[stem]
+++++
+\begin{equation*}
+\Omega_t=(\textrm{Id}+\theta_t)(\Omega_0) \qquad \text{with} \qquad \theta_t = -t G(\Omega_0)n , 
+\end{equation*}
+++++
+where stem:[t>0], we have
+
+[stem]
+++++
+\begin{equation*}
+ DJ(\Omega_0)(\theta_t)=-t\int_{\Gamma_0}G(\Omega_0)^2 <0.   
+\end{equation*}
+++++
+
+Thus, for a sufficiently small step size stem:[t], we have 
+
+[stem]
+++++
+\begin{equation*}
+ J(\Omega_{t}) < J(\Omega_0) \qquad \text{if} \qquad G(\Omega_0)\ne 0.   
+\end{equation*}
+++++
+
+It can be noted that to have stem:[DJ(\Omega_0)(\theta)<0], we need to choose stem:[\theta \cdot n >0]. Let stem:[l \in \mathbb{R}] a Lagrange multiplier for the volume constraint. The domain optimality condition, by using the Lagrange multiplier theorem, can be seen as 
+
+[stem]
+++++
+\begin{equation}\label{eq:Lm}
+DJ(\Omega)(\theta)+l Dg(\Omega)(\theta) = \int_{\Gamma} \theta \cdot n \left[l +G(\Omega)\right]  = 0.  
+\end{equation}
+++++
+
+
+*Numerical implementation :* For the numerical implementation, a domain sequence, stem:[\Omega_k], is computed which verifies the following constraints 
+
+[stem]
+++++
+\begin{equation*}
+   \partial \Omega_k = \Gamma_k \cup \Gamma_{fixed}. 
+\end{equation*}
+++++
+
+Let stem:[t>0] a fixed descent step,  as explained in <<allaire_conception_2006>> the following iterations are performed until convergence, for stem:[k\geq 0] :
+
+[stem]
+++++
+\begin{equation*}
+\Omega_{k+1} = (\textrm{Id} + \theta_k)(\Omega_k)
+\end{equation*}
+++++
+with 
+
+[stem]
+++++
+\begin{equation*}
+\theta_k = \begin{cases}
+-t\left[l_k+G(\Omega_k)\right]n_k &\qquad \text{on }  \Gamma_k \\
+0 &\qquad \text{on } \Gamma_{fixed}
+ \end{cases}
+\end{equation*}
+++++
+where stem:[n_k] is the normal vector of stem:[\partial \Omega_k] and stem:[l_k \in \mathbb{R}] a Lagrange multiplier. To extend the trace of stem:[\theta_k] on stem:[\partial \Omega_k] inside stem:[\Omega_k], we can solve the following system
+
+.Expansion PDE for GD
+[.prob]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\Delta\theta_k = 0 &\qquad \text{on } \Omega_k \\
+\theta_k = 0 &\qquad \text{on } \Gamma_{fixed} \\
+\theta_k = -t\left[l_k+G(\Omega_k)\right]n_k &\qquad \text{on } \Gamma_k.
+ \end{cases}
+\end{equation*}
+++++
+****
+
+Once we know stem:[\theta_k] about stem:[\Omega_k], we can deform the whole mesh to obtain a new one of the domain stem:[\Omega_{k+1}]. It will be advisable to remesh the domain from time to time when the mesh becomes of poor quality measure in stem:[\texttt{Feel++}] (which leads to numerical errors). 
+
+For a higher regularity, we can solve the following system
+
+.Regularised expansion PDE for GD
+[.prob#regexpgd]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\Delta\theta_k = 0 &\qquad \text{on } \Omega_k \\
+\theta_k = 0 &\qquad \text{on } \Gamma_{fixed} \\
+\frac{\partial \theta_k}{\partial n} = -t\left[l_k+G(\Omega_k)\right]n_k &\qquad \text{on } \Gamma_k.
+ \end{cases}
+\end{equation*}
+++++
+****
+
+.Proposition : Descent direction of <<regexpgd>>
+[.prop]
+****
+The <<regexpgd>> still provides a descent direction.
+****
+
+.Proof
+[%collapsible.proof]
+====
+We have 
+[stem]
+++++
+\begin{align*}
+    DJ(\Omega_k)(\theta_k) + l_k Dg(\Omega_k)(\theta_k) &= \int_{\Gamma_k}\theta_k \cdot n_k \left[l_k + G(\Omega_k)\right]\\
+    &=t^{-1}\int_{\Omega_k}\Delta\theta_k \cdot \theta_k - t^{-1}\int_{\Gamma_k}\theta_k \cdot \nabla \theta_k n_k,
+\end{align*}
+++++
+because of the boundary conditions and the fact that stem:[\Delta \theta_k =0]. By integrating, we finally obtain that
+
+[stem]
+++++
+\begin{equation*}
+DJ(\Omega_k)(\theta_k) + l_k Dg(\Omega_k)(\theta_k) =-t^{-1}\int_{\Omega_k}\|\nabla \theta_k\|^2 \leq 0.   
+\end{equation*}
+++++
+====
+
+Concerning the choice of the implementation of the Lagrange multiplier, the same model as _G.Allaire_ in http://www.cmap.polytechnique.fr/~allaire/map562/cantilever.edp[his code] will be taken into account (a kind of augmented Lagrangian). We thus have
+
+[stem]
+++++
+\begin{equation*}
+    l_k = al_{k-1}+b\frac{\int_{\Gamma_k}G(\Omega_k)}{|\Gamma_k|}+c\frac{|\Omega_k|-|\Omega_0|}{|\Omega_0|},
+\end{equation*}
+++++
+with stem:[a], stem:[b] and stem:[c] parameters to be chosen according to the problem studied.
+
+=== Null Space Gradient Flow
+
+Null Space Gradient Flow (NSGF), presented in <<feppon_shape_2019>>, is a new approach to solving constrained optimization problems. Unlike traditional methods, this technique does not require necessarily the adjustment of non-physical parameters, making it highly practical and reliable. Its applicability to shape optimization applications further enhances its usefulness.
+
+The key concept behind NSGF is to modify the gradient flow algorithm to accommodate the presence of constraints. This is achieved by solving an Ordinary Differential Equation (ODE) that governs the optimization trajectories, denoted as stem:[x(t)]. The ODE takes the form:
+
+[stem]
+++++
+\begin{equation*}
+\dot x = -\alpha_J \xi_J(x(t)) - \alpha_C \xi_C(x(t))
+\end{equation*}
+++++
+
+Here, stem:[\alpha_J] and stem:[\alpha_C] positive parameters, control the influence of the objective function and constraint violation, respectively. stem:[\xi_J(x)] and stem:[\xi_C(x)] represent the null space and range space directions, respectively. The null space direction, stem:[\xi_J(x)], is obtained by projecting the gradient stem:[\nabla J(x)] onto the cone of feasible directions, ensuring descent while respecting the constraints. The range space direction, stem:[\xi_C(x)], guides the optimization path smoothly towards the feasible region.
+
+
+We consider the case where the optimization takes place on a Hilbert space stem:[V] with inner product stem:[\langle  ., . \rangle_{V}]. The transpose of the differential of a function in infinite dimension is defined as follows.
+
+.Definition : Transpose
+[.def#def:DgT]
+****
+Let stem:[g : V \to \mathbb{R}^p] a differentiable function and stem:[x] a point of stem:[V]. Then, for any stem:[\mu \in \mathbb{R}^p] it exists a unique vector stem:[Dg^T(x)(\mu) \in V] such as 
+[stem]
+++++
+\begin{equation*}
+    \forall \mu \in \mathbb{R}^p \quad \forall \phi \in V \qquad \left\langle Dg^T(x)(\mu), \phi \right\rangle_{V} = \mu^T Dg(x)(\phi).
+\end{equation*}
+++++
+The linear operator stem:[Dg^T(x) : \mathbb{R}^p \to V] is called the transpose of stem:[Dg(x)].
+****
+
+
+For equality constrained problems (see Definition 3.3 in <<feppon_shape_2019>>) , null space step stem:[\xi_J] and range space step stem:[\xi_C] are defined as the following.
+
+.Definition : Null space and range space directions
+[.def#def:xi]
+****
+For any domain stem:[\Omega], the null space and range space directions stem:[\xi_C(\Omega) : \mathbb{R}^N \to \mathbb{R}^N] and stem:[\xi_J(\Omega) : \mathbb{R}^N \to \mathbb{R}^N] are defined by
+[stem]
+++++
+\begin{align*}
+ \xi_C(\Omega)(X)= &Dg^T(\Omega)\left[(Dg(\Omega) Dg^T(\Omega))^{-1}g(\Omega)\right](X), \\
+ \xi_J(\Omega)(X)= &\nabla J(\Omega)(X) - Dg^T(\Omega)\left[(Dg(\Omega)Dg^T(\Omega))^{-1}Dg(\Omega)\nabla J(\Omega)\right](X).
+\end{align*}
+++++
+****
+
+In order to control the step size stem:[\|\theta_n\|_{L^{\infty}(\mathbb{R}^N, \mathbb{R}^N)}] and keep all values of the displacement of the order of the mesh size, the parameters stem:[\alpha_{J,n}] and stem:[\alpha_{C,n}] are updated dynamically. 
+
+.Definition :  Parameters of directions
+[.def]
+****
+We consider stem:[A_J>0] and stem:[A_C>0] two parameters and stem:[n_0>0] the stem:[n_0]-th iteration. The coefficients are updated at every iteration according to the following rules :
+
+[stem]
+++++
+ \begin{align*}
+          \alpha_{J,n} &= \begin{cases}
+            \frac{A_J \texttt{hmin}}{\|\xi_J(\Omega_n)\|_{L^{\infty}}} \qquad \qquad \qquad \qquad \quad ~  n<n_0,\\
+            \frac{A_J \texttt{hmin}}{\max\left\{\|\xi_J(\Omega_n)\|_{L^{\infty}},\|\xi_J(\Omega_{n_0})\|_{L^{\infty}}\right\}}  \qquad n\geq n_0,
+        \end{cases} \\
+        \alpha_{C,n} &= \min\left\{0.9, \frac{A_C \texttt{hmin}}{\max\{\texttt{1e-9}, \|\xi_C(\Omega_n)\|_{L^{\infty}}\}}\right\}.
+    \end{align*} 
+++++  
+****
+
+
+As explained in <<feppon_shape_2019>>, stem:[A_J] and stem:[A_C] don't need fine tuning. Thus, to obtain a more general algorithm with the least possible parameters, we take stem:[A_J=A_C=1]. 
+
+.Proposition : Bounded directions
+[.prop]
+****
+These normalizations ensure that the infinite norm of the various terms is less than the smallest mesh size, i.e. 
+[stem]
+++++
+\begin{equation*}
+    \forall n\geq 0 \quad \|\alpha_{J,n}\xi_J(\Omega_n)\|_{L^{\infty}}\leq A_J\texttt{hmin} \quad \text{and} \quad \|\alpha_{C,n}\xi_C(\Omega_n)\|_{L^{\infty}}\leq \min\{\texttt{0.9}, A_C\texttt{hmin}\}.
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Trivial.
+====
+
+The key point of this method is to be able to determine the transpose of the differential of the equality constraint. To do this, consider a Hilbert space stem:[V=H^1(\mathbb{R}^N)] such that stem:[V\subset W^{1,\infty}(\Omega, \mathbb{R}^N)] with the following scalar product
+
+[stem]
+++++
+\begin{equation*}
+    \forall (\theta,\theta') \in V^2, \quad \left\langle \theta, \theta'\right\rangle_{V}=\int_{\Omega}\gamma^2 \nabla \theta:\nabla \theta' + \theta \cdot \theta'
+\end{equation*}
+++++
+where the parameter stem:[\gamma] is set proportional to the minimum mesh element size. 
+
+
+The differential of the cost function is assumed to be of the previous form with stem:[G(\Omega)] the shape gradient. Thus, as described in <<feppon_shape_2019>> Chapter 1 on page 54, the gradient of the cost function, stem:[\nabla J], is a regularised extension of stem:[G(\Omega)n], i.e 
+
+[stem]
+++++
+\begin{equation}\label{eq:gradJ}
+   \nabla J(\Omega) = G(\Omega)n \quad \text{on } \Gamma, 
+\end{equation}
+++++
+with stem:[n] the external unit normal. 
+
+.Proposition : Transposition of the differential for volume conservation
+[.prop#eq:DgTpb]
+****
+The transposition of <<eq:Dg>> is given by 
+[stem]
+++++
+   \begin{equation}\label{eq:DgTpb}
+       \begin{cases}
+-\gamma^2\Delta(Dg^T(\Omega)(e_1)) + Dg^T(\Omega)(e_1) = 0 &\qquad \text{in } \Omega, \\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = \frac{1}{\gamma^2}n &\qquad \text{on } \Gamma,\\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = 0 &\qquad \text{on } \Gamma_{fixed}.
+ \end{cases}
+   \end{equation} 
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Let's determine stem:[Dg^T]. First at all, let stem:[e={e_1}] be the canonical basis of stem:[\mathbb{R}]. Then, by linearity of differential, we have
+
+[stem]
+++++
+\begin{equation*}
+   \forall \mu \in \mathbb{R} \quad  Dg^T(\Omega)(\mu) =\mu_1 Dg^T(\Omega)(e_1).
+\end{equation*}
+++++
+with stem:[\mu=\mu_1 e_1]. Then, by taking stem:[\mu=e_1], for all stem:[\phi \in V] and by using  <<def:DgT>>, we obtain 
+
+[stem]
+++++
+\begin{equation*}
+ \left\langle Dg^T(\Omega)(e_1), \phi \right\rangle_{V} = e_1 Dg(\Omega)(\phi),   
+\end{equation*}
+++++
+in other words,
+
+[stem]
+++++
+\begin{equation*}
+  \int_{\Omega}\gamma^2 \nabla \left(Dg^T(\Omega)(e_1)\right):\nabla \phi + Dg^T(\Omega)(e_1)\cdot \phi = \int_{\Gamma}\phi \cdot n. 
+\end{equation*}
+++++
+
+We want to solve
+
+[stem]
+++++
+\begin{equation*}
+    \int_{\Omega}\gamma^2 \nabla U : \nabla \phi + U \cdot \phi = \int_{\Gamma}\phi \cdot n,
+\end{equation*}
+++++
+for all stem:[\phi] in stem:[V] with stem:[U=Dg^T(\Omega)(e_1)]. By using a integration of parts formula, it follows that
+
+[stem]
+++++
+\begin{equation*}
+    \int_{\Omega}\left(-\gamma^2 \Delta U + U \right)\cdot \phi = \int_{\Gamma}\left(I-\gamma^2 \nabla U\right)n \cdot \phi -\int_{\Gamma_{fixed}}\gamma^2\nabla U n \cdot \phi.
+\end{equation*}
+++++
+
+By taking stem:[\nabla U n = I\frac{n}{\gamma^2}] on stem:[\Gamma] and stem:[\nabla U n = 0] on stem:[\Gamma_{fixed}], we therefore need to solve the following problem 
+
+[stem]
+++++
+\begin{equation}
+    \begin{cases}
+-\gamma^2\Delta(Dg^T(\Omega)(e_1)) + Dg^T(\Omega)(e_1) = 0 &\qquad \text{in } \Omega, \\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = \frac{1}{\gamma^2}n &\qquad \text{on } \Gamma,\\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = 0 &\qquad \text{on } \Gamma_{fixed}.
+ \end{cases}
+\end{equation} 
+++++
+====
+
+
+.Proposition : Null space and range space directions for volume conservation
+[.prop]
+****
+The null space and range space directions, in the case of <<eq:Omegad>>, can be written as follow
+[stem]
+++++
+\begin{equation}
+\xi_J(\Omega)(X)=\nabla J(\Omega)(X) -\frac{\left(\int_{\partial \Omega} \nabla J(\Omega) \cdot n\right)Dg^T(e_1)(X)}{\int_{\Omega}Dg^T(\Omega)\left(e_1\right)\cdot n},
+\end{equation}
+++++
+
+and 
+
+[stem]
+++++
+\begin{equation}
+\xi_C(\Omega)(X)=\left(\frac{g(\Omega)}{\int_{\partial \Omega}Dg^T(\Omega)(e_1)\cdot n}\right)Dg^T(\Omega)\left(e_1\right)(X).
+\end{equation}
+++++
+
+****
+
+.Proof
+[%collapsible.proof]
+====
+By definition of stem:[g] and stem:[Dg], we have
+[stem]
+++++
+\begin{equation*} (Dg(\Omega)Dg^T(\Omega))^{-1}g(\Omega)=\frac{g(\Omega)}{\int_{\partial \Omega}Dg^T(\Omega)(e_1)\cdot n}
+\end{equation*}
+++++
+
+and
+
+[stem]
+++++
+\begin{equation*}
+(Dg(\Omega)Dg^T(\Omega))^{-1}Dg(\Omega)\nabla J(\Omega)=\frac{\left(\int_{\partial \Omega} \nabla J(\Omega) \cdot n\right)}{\int_{\Omega}Dg^T(\Omega)\left(e_1\right)\cdot n}.
+\end{equation*}
+++++
+
+Thus, the result can be deduced.
+====
+
+[NOTE]
+====
+All the steps above are valid when there are several equality constraints, i.e. stem:[g : V \to \mathbb{R}^p] with stem:[p\geq 1]. Furthermore, it is possible to extend this method to inequality constraints as explained in <<feppon_shape_2019>>.
+====
+
+*Numerical Implementation :* For the numerical implementation, a domain sequence, stem:[\Omega_k], is computed which verifies the following constraints 
+
+[stem]
+++++
+\begin{equation*}
+   \partial \Omega_k = \Gamma_k \cup \Gamma_{fixed},
+\end{equation*}
+++++
+
+and
+
+[stem]
+++++
+\begin{equation*}
+\Omega_{k+1} = (\textrm{Id} + \theta_k)(\Omega_k).
+\end{equation*}
+++++
+
+
+.Expansion problem for the NSGF method
+[.prob]
+****
+Using the NSGF method, we define the displacement field stem:[\theta_k] over all stem:[\Omega_k] such that 
+
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\Delta\theta_k = 0 &\qquad \text{in } \Omega_k \\
+\theta_k = 0 &\qquad \text{on } \Gamma_{fixed} \\
+\frac{\partial \theta_k}{\partial n} = -\alpha_C \xi_C(\Omega_k) - \alpha_J \xi_J(\Omega_k) &\qquad \text{on } \Gamma_k.
+ \end{cases}
+\end{equation*}
+++++
+****
+
+== Results
+
+[NOTE]
+====
+It is important to note that any other shape could have been selected for the initial domain as long as it shared the same fixed boundaries.
+====
+
+=== Linear-elasticity : the cantilever
+
+We consider a homogeneous isotropic elastic solid which occupies a bounded domain stem:[\Omega] in stem:[\mathbb{R}^2]. We suppose that the boundary is composed of three parts 
+
+[stem]
+++++
+\begin{equation*}
+\partial \Omega = \Gamma \cup \Gamma_N \cup \Gamma_D   
+\end{equation*}
+++++
+where stem:[\Gamma] is a variable part traction-free (homogeneous Neumann), stem:[\Gamma_D] is a fixed part on which the solid is fixed (homogeneous Dirichlet) and stem:[\Gamma_N] is a fixed part on which stem:[f] forces are applied (inhomogeneous Neumann). The cantilever problem is illustrated in the following image.
+
+
+.Illustration of the 2D cantilever with a hole. The stem:[\Gamma_D] and stem:[\Gamma_N] boundaries (Dirichlet condition and Neumann condition) are fixed. The stem:[\Gamma] boundary (of which the hole is a part) is movable in order to optimize the shape.
+image::cantilever/cantilever.png[width=700]
+
+.Cantilever PDE
+[.prob#cantilever:edp]
+****
+The displacement stem:[u : \mathbb{R}^N \to \mathbb{R}^N] is the solution of the system 
+
+[stem]
+++++
+\begin{equation}
+\begin{cases}
+-\nabla \cdot \sigma = 0  &\qquad \text{in } \Omega,\\
+\sigma = 2\mu e(u) + \lambda tr(e(u))I &\qquad \text{in } \Omega,\\
+u=0 &\qquad \text{on } \Gamma_D,\\
+\sigma n = f &\qquad \text{on } \Gamma_N,\\
+\sigma n = 0 &\qquad \text{on } \Gamma,
+ \end{cases}  
+\end{equation}
+++++
+with stem:[\sigma(u)\in M_N(\mathbb{R})] the stress tensor, stem:[\lambda, \mu >0] the Lamé coefficients of the material and stem:[e(u)=\frac{1}{2}\left(\nabla u + \nabla u^T\right)] the deformation tensor.
+****
+
+.Cantilever cost function
+[.prob#cantilever:minpb]
+****
+We wish to solve the following minimisation problem
+[stem]
+++++
+\begin{equation}\label{cantilever:minpb}
+\inf_{\Omega \in \Omega_{ad}} \left\{ J(\Omega) = \int_{\Gamma_N} f \cdot u  \right\}
+\end{equation}
+++++
+where the set of admissible forms is defined as
+
+[stem]
+++++
+\begin{equation}\label{cantilever:thetaad}
+\Omega_{ad}=\left\{\Omega \in C(\Omega_0) \mid \Gamma_D \cup \Gamma_N \subset \partial \Omega, ~ g(\Omega)=0\right\}
+\end{equation}
+++++
+with stem:[g] defined by <<eq:Omegad>>. 
+****
+
+[NOTE]
+====
+It should be noted that the domain of integration of the cost function does not depend on stem:[\Omega] because stem:[\Gamma_N] is fixed. Thus, the dependence with respect to the domain is ensured only through the solution of the previous model. 
+====
+
+
+
+==== Theoretical formulation of the problem
+
+
+.The weak formulation of <<cantilever:edp>>
+[.prop#cantilever:weakform]
+****
+The weak formulatio of the cantilever problem is given by
+[stem]
+++++
+\begin{equation}
+\int_{\Omega}2\mu e(u):e(\phi) + \int_{\Omega}\lambda (\nabla \cdot u)(\nabla \cdot \phi) = \int_{\Gamma_N}f \cdot \phi.    
+\end{equation}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+The divergence of stem:[\sigma] is given by
+
+[stem]
+++++
+    \begin{equation*}
+\nabla \cdot \sigma = \left(\sum_{j=1}^N \frac{\partial \sigma_{ij}}{\partial x_j}\right)_{1\leq i\leq N}.
+\end{equation*}
+++++
+
+Let stem:[u \in H^1_{\Gamma_N}(\Omega)] solution of <<cantilever:edp>>. By using the fact that stem:[tr(e(u))=\nabla \cdot u], the equation can be written for stem:[1\leq i\leq N] as
+
+[stem]
+++++
+\begin{equation*}
+ -\sum_{j=1}^N \frac{\partial}{\partial x_j}\left[\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)+\lambda (\nabla \cdot u)\delta_{ij}\right]=0.   
+\end{equation*}
+++++
+
+By multiplying by a test function stem:[\phi \in H^1_{\Gamma_D}(\Omega)] and integrating over the domain stem:[\Omega], we have
+
+[stem]
+++++
+\begin{equation*}
+ \int_{\Omega}\sum_{j=1}^N\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_j}\right)\frac{\partial \phi_i}{\partial x_j}+\int_{\Omega}\lambda (\nabla \cdot u) \frac{\partial \phi_i}{\partial x_i}=\int_{\Gamma_N}f_i \phi_i.   
+\end{equation*}
+++++
+
+In addition, we have the following result
+
+[stem]
+++++
+\begin{equation}\label{ipp:utils1}
+\sum_{i,j=1}^{N}\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\frac{\partial \phi_i}{\partial x_j}=\frac{1}{2}\sum_{i,j=1}^{N}\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\left(\frac{\partial \phi_i}{\partial x_j}+\frac{\partial \phi_j}{\partial x_j}\right)=2e(u):e(\phi)  
+\end{equation}
+++++
+
+Finally, summing over the index stem:[i] in the previous formulation and using this result, we obtain the result.
+====
+
+
+.Definition : Lagrangian of <<cantilever:edp>> and <<cantilever:minpb>>
+[.def]
+****
+We denote the Lagrangian of this problem by
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+\mathcal{L}:\Omega_{ad}\times \left(H^1_{\Gamma_D}(\mathbb{R}^N)\right)^2&\to& \mathbb{R}\\
+(\Omega, v,q) &\mapsto &\int_{\Omega}2\mu e(v):e(q) + \int_{\Omega} \lambda (\nabla \cdot v)(\nabla \cdot q) - \int_{\Gamma_N} f \cdot q + \int_{\Gamma_N} f \cdot v.
+\end{array}
+\end{equation*} 
+++++
+****
+
+[NOTE]
+====
+It should be noted that the different variables of stem:[\mathcal{L}] are independent because we consider Lagrange multipliers on stem:[H^1_{\Gamma_D}(\mathbb{R}^N)] and not stem:[H^1_{\Gamma_D}(\Omega)] and especially that stem:[\Gamma_N] is independent of stem:[\Omega] because it is fixed. 
+====
+
+.Dual PDE of the cantilever problem
+[.prob]
+****
+The dual PDE of the cantilever problem is 
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\nabla \cdot \sigma = 0  &\qquad \text{on } \Omega\\
+\sigma = 2\mu e(p) + \lambda tr(e(p))I &\qquad \text{on } \Omega\\
+p=0 &\qquad \text{on } \Gamma_D\\
+\sigma n = -f &\qquad \text{on } \Gamma_N\\
+\sigma n = 0 &\qquad \text{on } \Gamma
+ \end{cases}  
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+The partial derivative with respect to stem:[v] : let stem:[\phi \in H^1_{\Gamma_D}(\mathbb{R}^N)]
+
+[stem]
+++++
+\begin{equation*}
+\left\langle \frac{\partial \mathcal{L}}{\partial v}(\Omega, v, q), \phi \right\rangle = \int_{\Omega}2\mu e(\phi):e(q) + \int_{\Omega} \lambda (\nabla \cdot \phi) (\nabla \cdot q) + \int_{\Gamma_N} f \cdot \phi,   
+\end{equation*}
+++++
+
+which, when it vanishes, corresponds to the weak formulation of the dual problem. 
+====
+
+[NOTE]
+====
+Note that this corresponds exactly to the primal problem with a minus sign. This is due in particular to the choice of stem:[J] and the boundary conditions of the primal problem. Indeed, we have stem:[J] which depends on stem:[f] on stem:[\Gamma_N] and the boundary conditions are all null except on stem:[\Gamma_N] which is equal to stem:[f]. Thus, we can avoid solving the dual problem in this case and simply use the solution of the primal problem.
+====
+
+.Shape gradient for the cantilever problem
+[.prop]
+****
+The shape gradient for the cantiler problem is defined by
+[stem]
+++++
+\begin{equation}\label{cantilever:gradshape}
+    G(\Omega)=-2\mu\|e(u)\|^2-\lambda(tr(e(u)))^2.
+\end{equation}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Let's calculate the partial derivative of stem:[\mathcal{L}] with respect to the stem:[\Omega] domain in the stem:[\theta] direction
+
+[stem]
+++++
+\begin{equation*}
+ \frac{\partial \mathcal{L}}{\partial \Omega}(\Omega, v, q)(\theta)= \int_{\partial \Omega}\theta \cdot n \left[ 2\mu e(v):e(q) + \lambda (\nabla \cdot v)(\nabla \cdot q)\right]   
+\end{equation*}
+++++
+by using <<Prop:diffJOmega>>. When we evaluate this derivative with the state stem:[u(\Omega)] and the adjoint state stem:[p(\Omega)=u(\Omega)], we find exactly the value of the derivative of the cost function
+
+[stem]
+++++
+\begin{equation}\label{cantilever:shaped}
+\frac{\partial \mathcal{L}}{\partial \Omega}\left(\Omega, u(\Omega), p(\Omega)\right)(\theta)= -\int_{\Gamma}\theta \cdot n \left[ 2\mu \|e(u)\|^2 + \lambda tr(e(u))^2\right] = DJ(\Omega)(\theta),
+\end{equation}
+++++
+
+as explained here <<lagmethod:gradientJ>>. Thus by definition we obtain the shape gradient. 
+====
+
+
+
+==== Experimental Evaluation
+
+In this section, we will present various results on the optimization problem concerning the shape of cantilevers. The initial domain considered is a trapezoid with two feet in the 2D case (four feet in the 3D case). The choice of a trapezoid as the initial shape is advantageous due to its simplicity and its ability to approximate the solution of the problem. Throughout this section, unless specified otherwise, all results have been obtained using stem:[\mathbb{P}_1] continuous finite elements. All simulations are carried out using the classic gradient descent method. The NSGF method is used in the following example, a rigid body in a Stokes fluid.
+
+
+*2D simulations for various types of cantilever :* 
+
+We present the application of shape optimization to a 2D cantilever with two pillars. The specific parameter values used in the analysis are detailed in the following table.
+
+.Geometric parameters and Lamé coefficient of the initial domain for the 2D case of the cantilever. The Lamé coefficients are stem:[\lambda] and stem:[\mu]. stem:[H] represents the height of the trapezoid, stem:[L_1] the large base and stem:[L_2] the small base. The force applied to the curve stem:[\Gamma_N] is defined by stem:[f].
+|===
+
+|Symbol |Value (dimensionless) 
+
+|stem:[\lambda] | stem:[50/9]
+|stem:[\mu] | stem:[350/27]
+|stem:[H] | stem:[9]
+|stem:[L_1] | stem:[8]
+|stem:[L_2] | stem:[2]
+|stem:[f] | stem:[(0,-1)]
+
+|===
+
+
+_No  hole :_  
+
+We begin by considering the simplest case, which is the cantilever without any holes, as depicted in Figures below. To ensure clear visibility of the mesh in print, a discretization parameter of stem:[h=0.4] is set. For the initialization of the Lagrange multiplier, we choose stem:[l=0.5]. Additionally, the values of stem:[a=b=0.5] and stem:[c=10] are set, along with a descent step of stem:[t=0.2]. These specific values have been determined through empirical testing to achieve optimal performance.
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the 2D cantilever without hole.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[4.6834] 
+|stem:[3.1346] 
+|stem:[1.3630e-2] 
+|stem:[1.696e-2] 
+|stem:[125]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 2D cantilever without hole with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The iterations range from stem[0] to stem:[125].
+image::cantilever/results_nohole-2D-l0.5-t0.2-h0.4-a0.5b0.5-c10-n200.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 2D cantilever without hole with the following parameters:  stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=60]) is displayed in the middle. The final domain (stem:[k=125]) is displayed on the right. 
+|===
+
+image:cantilever/nohole_0.png[width=300] 
+image:cantilever/nohole_60.png[width=300] 
+image:cantilever/nohole_125.png[width=300]
+
+|===
+
+
+_One hole :_ 
+
+The second test consists of studying the cantilever with a single hole. The results obtained are presented in Figures below. We use a discretization parameter of stem:[h=0.4]. For the Lagrange multiplier, we initialize with stem:[l=0.5], and set stem:[a=b=0.5] and stem:[c=10] with a descent step of stem:[t=0.2].
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the one hole 2D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[4.7035] 
+|stem:[3.2162] 
+|stem:[2.9980e-3] 
+|stem:[1.8906e-2] 
+|stem:[125]
+|===
+
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 2D cantilever with one hole with the following parameters: stem:[h=0.], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The iterations range from stem:[0] to stem:[125].
+image::cantilever/results_hole-2D-l0.5-t0.2-h0.4-a0.5b0.5-c10-n200.png[width=700]
+
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 2D cantilever with one hole with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=60]) is displayed in the middle. The final domain (stem:[k=125]) is displayed on the right.
+|===
+
+image:cantilever/hole_0.png[width=300] 
+image:cantilever/hole_60.png[width=300] 
+image:cantilever/hole_125.png[width=300]
+
+|===
+
+
+
+_Four holes :_ 
+
+The last type of cantilever studied is one with four holes in its domain. The results are displayed in the figures below. We use a discretization parameter of stem:[h=0.4]. For the Lagrange multiplier, we initialize with stem:[l=0.5], and set stem:[a=b=0.5] and stem:[c=10] with a descent step of stem:[t=0.2].
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the four holes 2D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[5.1589] 
+|stem:[3.3770] 
+|stem:[2.5317e-3] 
+|stem:[1.5615e-2] 
+|stem:[125]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 2D cantilever with 4 holes with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The iterations range from stem:[0] to stem:[125].
+image::cantilever/results_4holes-2D-l0.5-t0.2-h0.4-a0.5b0.5-c10-n200.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 2D cantilever with 4 holes with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=60]) is displayed in the middle. The final domain (stem:[k=125]) is displayed on the right.
+|===
+
+image:cantilever/4hole_0.png[width=300]
+image:cantilever/4hole_60.png[width=300]
+image:cantilever/4hole_125.png[width=300]
+
+|===
+
+
+The results presented above demonstrate that satisfactory outcomes can be achieved using the proposed method. Notably, the obtained shapes closely resemble those reported in various papers that focus on optimizing the geometrical shape of cantilevers, such as <<allaire_conception_2006>>. Furthermore, we successfully decrease the cost function while approaching the initial volume of the domain, which aligns precisely with the desired behavior. It is worth noting that potential geometric instabilities, in the form of spikes, may emerge on stem:[\Gamma_D] after a certain number of iterations. These spikes are also observed in the 3D case, as illustrated in the subsequent figures.
+
+*3D simulations for various types of cantilever :* 
+
+In this section, we address the case of the 3D cantilever, which introduces additional complexities compared to the 2D case and results in longer computation times. Incorporating holes into the structure also increases the risk of encountering mesh superposition issues. The overall geometry of the 3D cantilever remains similar to the 2D case, with the addition of four pillars, and boundary conditions are now applied to surfaces instead of curves. The specific parameter values used in the analysis are provided in detail in following table.
+
+
+.Geometric parameters and Lamé coefficient of the initial domain for the 2D case of the cantilever. The Lamé coefficients are stem:[\lambda] and stem:[\mu]. stem:[H] represents the height of the truncated pyramid, stem:[C_1] the side of the largest square base and stem:[C_2] the side of the smallest square base. The force applied to the surface stem:[\Gamma_N] is defined by stem:[f].
+|===
+
+|Symbol |Value (dimensionless) 
+
+|stem:[\lambda] | stem:[50/9]
+|stem:[\mu] | stem:[350/27]
+|stem:[H] | stem:[9]
+|stem:[C_1] | stem:[8]
+|stem:[C_2] | stem:[2]
+|stem:[f] | stem:[(0,-1,0)]
+
+|===
+
+
+_No hole :_ 
+
+Let's first consider the case without a hole. We use a discretization parameter of stem:[h=0.8]. For the coefficients affecting the optimization problem, we set stem:[l=0.5], stem:[a=b=0.5], stem:[c=3], and choose a descent step stem:[t] of stem:[0.1]. The results of this test are presented in Figures below.
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the no hole 3D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[4.8060] 
+|stem:[3.0484] 
+|stem:[0.1439] 
+|stem:[2.1647e-2] 
+|stem:[400]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 3D cantilever without hole with the following parameters: stem:[h=0.8], stem:[t=0.1], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The iterations range from stem:[0] to stem:[400].
+image::cantilever/results_nohole-3D-l0.5-t0.1-h0.8-a0.5b0.5-c2-n500.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 3D cantilever without hole with the following parameters:  stem:[h=0.8], stem:[t=0.1], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=150]) is displayed in the middle. The final domain (stem:[k=400]) is displayed on the right.
+|===
+
+image:cantilever/3Dnohole_0.png[width=300]
+image:cantilever/3Dnohole_120.png[width=300]
+image:cantilever/3Dnohole_400.png[width=300]
+
+|===
+
+
+_One hole :_ 
+In the next test, we add a hole inside the material. The results are presented in Figures below. We use a discretization parameter of stem:[h=0.8]. The other coefficients used are stem:[l=0.5], stem:[a=b=0.5], stem:[c=2], and stem:[t=0.08]. 
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the one hole 3D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[6.4813] 
+|stem:[3.7726] 
+|stem:[0.2582] 
+|stem:[4.7253e-2] 
+|stem:[250]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 3D cantilever with holes with the following parameters: stem:[h=0.8], stem:[t=0.08], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The iterations range from stem:[0] to stem:[250].
+image::cantilever/results_hole-3D-l0.5-t0.08-h0.8-a0.5b0.5-c2-n500.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 3D cantilever with holes with the following parameters:  stem:[h=0.8], stem:[t=0.08], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=150]) is displayed in the middle. The final domain (stem:[k=250]) is displayed on the right.
+|===
+
+image:cantilever/3Dhole_0.png[width=300]
+image:cantilever/3Dhole_120.png[width=300]
+image:cantilever/3Dhole_250.png[width=300]
+
+|===
+    
+ 
+
+It is important to note that the chosen optimal shape in the simulations effectively reduces the cost function while maintaining the volume. However, due to limitations, we had to prematurely halt the simulations. If allowed to continue, the cost function would have been further minimized, resulting in a more optimal shape. Nonetheless, the obtained shape presents several issues. Specifically, certain areas such as the feet and top part exhibit more prominent outgrowths, which can be attributed to volume conservation. The shape optimization process tends to hollow out the cantilever below the desired volume (between the four legs). As a result, to compensate for this volume loss, protrusions seem to emerge after a certain number of iterations. Another significant issue encountered is mesh collision and overlap. Additionally, the discontinuities observed in the curves of the different simulations correspond to the remeshing that occurs during the iterations.
+
+
+=== A rigid body in a Stokes flow
+
+We consider a rigid object stem:[S] set in motion into an incompressible fluid with viscosity stem:[\mu] at low Reynolds number. The fluid occupies a bounded domain stem:[\Omega] in stem:[\mathbb{R}^N]. We suppose that the boundary is composed of two parts 
+
+[stem]
+++++
+\begin{equation*}
+\partial \Omega = \Gamma_S \cup \Gamma_B,
+\end{equation*} 
+++++
+where stem:[\Gamma_S] is a variable part associated with the boundary of the rigid object and stem:[\Gamma_B] is a fixed part corresponding to the boundary of the domain containing the fluid. Normally, we would consider an edge at an infinite distance from the object. However, in finite elements we are limited for this kind of hypothesis. It is impossible to consider an infinite wall, and the further away the edge of the domain containing the fluid is, the more elements are needed to mesh it, which has a huge impact on calculation time, particularly in 3D.  We will therefore study shape optimisation in a context that is slightly different from <<moreau_shapes_2022>>. The Stokes problem is illustrated in the following figure.
+
+.Illustration of the stokes problem. The stem:[\Gamma_B] boundaries is fixed. The stem:[\Gamma_S] boundary is movable in order to optimize the shape.
+image::stokes/stokes.png[width=400]
+
+
+Taking the same conditions as in <<moreau_shapes_2022>>, we consider the folling PDE.
+
+.Rigid object in Stokes flow PDE
+[.prob#stokes:edp]
+****
+Let a linear background flow stem:[U^{\infty}] and stem:[U] the translational velocities of the object.  The fluid velocity field stem:[u : \mathbb{R}^N \to \mathbb{R}^N] and the pressure field stem:[p : \mathbb{R}^N \to \mathbb{R}] is the solution of the Stokes equations
+[stem]
+++++
+\begin{equation}
+\begin{cases}
+-\mu \Delta u + \nabla p = 0  &\qquad \text{in } \Omega,\\
+\nabla \cdot u = 0 &\qquad \text{in } \Omega,\\
+u = U &\qquad \text{on } \Gamma_S,\\
+u = U^{\infty} &\qquad \text{on } \Gamma_B.
+ \end{cases}  
+\end{equation}
+++++
+****
+
+.Rigid object in Stokes flow cost function
+[.prob#stokes:minpb]
+****
+We wish to solve the following minimisation problem
+[stem]
+++++
+\begin{equation}
+\inf_{\Omega \in \Omega_{ad}} \left\{ J_{\alpha}(\Omega) = \int_{\Gamma_S} \sigma(u,p)n\cdot \alpha \right\}
+\end{equation}
+++++
+where stem:[n] is the normal to stem:[\Gamma_S] pointing _outwards with respect to the fluid domain_ (therefore inward w.r.t the object) and stem:[\sigma] is the stress tensor defined as
+[stem]
+++++
+\begin{equation*}
+    \sigma(u,p)=-pI + 2\mu e(u)
+\end{equation*}
+++++
+where stem:[e] is the deformation tensor, given by 
+[stem]
+++++
+\begin{equation*}
+    e(u)=\frac{1}{2}\left(\nabla u + \nabla u^T\right).
+\end{equation*}
+++++
+
+We define the set of admissible forms as
+[stem]
+++++
+\begin{equation}
+\Omega_{ad}=\left\{\Omega \in C(\Omega_0) \mid \Gamma_B \subset \partial \Omega, ~ g(\Omega)=0\right\}
+\end{equation}
+++++
+where stem:[g] is defined as in <<eq:Omegad>>.
+****
+
+By taking precise values for stem:[U], stem:[\alpha] and stem:[U^{\infty}], one can express the cost function as an input to the large strength tensor explained in <<moreau_shapes_2022>>. This brings us back to a problem of resistance: what is the optimal shape to have the least possible resistance on the fluid. They correspond with the projection of the hydrodynamic drag force and torque - exerted by the moving particle to the fluid - along one of the basis vectors.
+
+.Cost function stem:[J_{\alpha}] associated with the entries of the grand resistance tensor (see <<moreau_shapes_2022>>) with respect to the choice of stem:[U], stem:[\alpha] and stem:[U^{\infty}].
+|===
+
+|stem:[J_{\alpha}] |stem:[\alpha] |stem:[U] |stem:[U^{\infty}] 
+
+|stem:[K_{ij}] | stem:[e_j] | stem:[e_i] | stem:[0]
+|stem:[Q_{ij}] | stem:[e_j \wedge (x,y,z)^T] | stem:[e_i \wedge (x,y,z)^T] | stem:[0]
+|stem:[C_{ij}] | stem:[e_j \wedge (x,y,z)^T] | stem:[e_i] | stem:[0]
+
+|===
+
+
+The problem setup is well presented in the following figure taken from the article <<moreau_shapes_2022>>. Several examples of resistance problem are illustrated on the right side of the figure for different entries of the grand resistance tensor. 
+
+.Problem setup taken from <<moreau_shapes_2022>> : according the previous notation, we have stem:[S=\mathcal{S}], stem:[B=\mathcal{B}], stem:[\Omega=\mathcal{V}] and the opposite direction of the normal, i.e stem:[-n]. The left figure illustrate the Stokes problem in three dimension. In the right side, several examples of resistance problem for different entries of the grand resistance tensor are presented.
+image::stokes_flow_shape_privat.png[width=700]
+
+
+
+==== Theoretical formulation of the problem
+Let us start by defining the following property which is an important result by integration of parts in the field of fluid mechanics and which will be of great help to us in the future.
+
+.Integration by parts formula for Stokes 
+[.prop#stokes:ipp]
+****
+Let stem:[v] and stem:[\phi] in stem:[H^1(\mathbb{R}^N)], we have 
+[stem]
+++++
+\begin{equation*}
+    -\int_{\Omega}\left(\Delta v + \nabla(\nabla \cdot v)\right)\cdot \phi =2\int_{\Omega}e(v):e(\phi)-2\int_{\partial \Omega}e(v)n\cdot \phi.
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Let stem:[v] and stem:[\phi] in stem:[H^1(\mathbb{R}^N)].
+First of all, by integration by parts we obtain the following relation
+[stem]
+++++
+\begin{equation*}
+     -\int_{\Omega}\sum_{j=1}^N\frac{\partial}{\partial x_j}\left(\frac{\partial v_i}{\partial x_j}+ \frac{\partial v_j}{\partial x_i}\right)\phi_i = \int_{\Omega}\sum_{j=1}^{N}\left(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\right)\frac{\partial \phi_i}{\partial x_j}-\int_{\partial \Omega}\sum_{j=1}^N\left(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\right)\phi_i n_j
+\end{equation*}
+++++
+By summing over the index stem:[i] on the left and right, and using the relation obtain in the end of the proof of <<cantilever:edp>>, we finally have that
+[stem]
+++++
+\begin{equation*}
+    -\int_{\Omega}\left(\Delta v + \nabla(\nabla \cdot v)\right)\cdot \phi = 2\int_{\Omega}e(v):e(\phi)-\int_{\partial \Omega} 2e(v)n\cdot \phi.
+\end{equation*}
+++++
+====
+
+.Definition : Lagrangian of <<stokes:edp>> and <<stokes:minpb>>
+[.def]
+****
+Since we are working with Dirichlet conditions, we must use the form of the equation <<stokes:edp>> directly for the variational formulation and add to the Lagrangian, Lagrange multipliers associated with Dirichlet constraints. We denote the Lagrangian of this problem by 
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+\mathcal{L}_{\alpha}:\Omega_{ad}\times \left(H^1(\mathbb{R}^N)\right)^4\times \left(L^2(\mathbb{R}^N)\right)^2&\to& \mathbb{R}\\
+(\Omega, v,h1,\lambda, \beta, q,h2) &\mapsto & \int_{\Gamma_S}\sigma(v,q)n\cdot \alpha + \int_{\Omega}\left[-\mu \Delta v + \nabla q\right]\cdot h_1 \\
+&&  + \int_{\Omega}(\nabla \cdot v) h_2 + \int_{\Gamma_S}\lambda \cdot (v-U)\\&& + \int_{\Gamma_B}\beta \cdot (v-U^{\infty})
+\end{array}
+\end{equation*} 
+++++
+****
+
+.Dual PDE of the rigid object in Stokes flow problem
+[.prob#stokes:adjpb]
+****
+The dual PDE of the rigid object in Stokes flow problem is
+[stem]
+++++
+\begin{equation}\label{stockes:adjpb}
+\begin{cases}
+-\mu \Delta u^{*} + \nabla p^{*} = 0  &\qquad \text{in } \Omega,\\
+\nabla \cdot u^{*} = 0 &\qquad \text{in } \Omega,\\
+u^{*} = \alpha &\qquad \text{on } \Gamma_S,\\
+u^{*} = 0 &\qquad \text{on } \Gamma_B,
+ \end{cases}  
+\end{equation}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Let's start by determining the dual problem. In all the following, for the sake of readability, we will omit the different variables of the Lagrangian. Let's derive stem:[\mathcal{L}_{\alpha}] w.r.t stem:[q]. For all stem:[\phi \in H^1(\mathbb{R}^N)], we have
+[stem]
+++++
+\begin{equation*}
+    \left\langle  \frac{\partial \mathcal{L}_{\alpha}}{\partial q}, \phi\right\rangle = \int_{\Gamma_S} \sigma(0,\phi)n\cdot \alpha + \int_{\Omega}\nabla \phi \cdot h_1.
+\end{equation*}
+++++
+Using a integration by parts formula, then
+[stem]
+++++
+\begin{equation*}
+\left\langle  \frac{\partial \mathcal{L}_{\alpha}}{\partial q}, \phi\right\rangle = -\int_{\Gamma_S} \phi (n\cdot \alpha) - \int_{\Omega}\phi\nabla \cdot h_1 + \int_{\partial \Omega}\phi  (n \cdot h_1).
+\end{equation*}
+++++
+Taking stem:[\phi] with compact support in stem:[\Omega], the variables stem:[h_1=u^{*}] and stem:[h_2=p^{*}] and using <<dualderivative>>, we finally have
+[stem#stokes:adj2]
+++++
+\begin{equation}\label{stokes:adj2}
+    \nabla\cdot u^{*} = 0 \qquad \text{in } \Omega.
+\end{equation}
+++++
+
+Let's derive stem:[\mathcal{L}_{\alpha}] w.r.t stem:[v]. For all stem:[\phi \in H^1(\mathbb{R}^N)], then
+[stem]
+++++
+\begin{equation}
+    \left\langle \frac{\partial \mathcal{L}_{\alpha}}{\partial v},\phi \right\rangle =  \int_{\Gamma_S}\sigma(\phi,0)n\cdot \alpha  +\int_{\Omega}-\mu\Delta \phi \cdot h_1 + h_2\nabla \cdot \phi + \int_{\Gamma_S} \lambda \cdot v + \int_{\Gamma_B}\beta \cdot v.
+\end{equation}
+++++
+
+Using twice integration by parts, we obtain the following formulation
+[stem]
+++++
+\begin{multline*}
+  \left\langle \frac{\partial \mathcal{L}_{\alpha}}{\partial v},\phi \right\rangle = -\int_{\Omega}\left[\mu \Delta h_1 + \nabla h_2\right]\cdot \phi + \int_{\partial \Omega}\mu \nabla h_1 n \cdot \phi - \mu \nabla \phi n \cdot h_1 + h_2(n\cdot \phi) \\+ \int_{\Gamma_S}\lambda \cdot v +2\mu e(\phi)n\cdot \alpha + \int_{\Gamma_B}\beta \cdot \phi.
+\end{multline*}
+++++
+
+Taking stem:[\phi] with compact support in stem:[\Omega], the variables stem:[h_1=u^{*}] and stem:[h_2=-p^{*}] and using <<dualderivative>>, 
+even if it means changing the sign of stem:[p^{*}], we finally have that
+[stem#stokes:adj1]
+++++ 
+\begin{equation}\label{stokes:adj1}
+    -\mu \Delta u^{*} + \nabla p^{*} = 0 \qquad \text{in } \Omega.
+\end{equation}
+++++
+Let us start from the first equation for stem:[\frac{\partial \mathcal{L}_{\alpha}}{\partial v}] and apply the <<stokes:ipp>> twice in order to obtain the following result
+
+[stem]
+++++
+\begin{multline*}
+\left\langle \frac{\partial \mathcal{L}_{\alpha}}{\partial v},\phi \right\rangle = -\int_{\Omega}\mu \left[\Delta h_1 + \nabla(\nabla \cdot h_1) +\nabla h_2\right]\cdot \phi + \int_{\Omega}\mu \nabla(\nabla\cdot \phi)\cdot h_1  + \int_{\partial \Omega}h_2(n\cdot \phi)\\+2\mu\int_{\partial \Omega} e(h_1)n\cdot \phi-e(\phi)n\cdot h_1 + \int_{\Gamma_B}\beta \cdot \phi+\int_{\Gamma_S} \lambda\cdot \phi +2\mu e(\phi)n\cdot \alpha.
+\end{multline*}
+++++
+
+Let us take the test functions stem:[\phi] with zero divergence such that stem:[\phi] vanishes on stem:[\partial \Omega] and stem:[e(\phi)n] describes stem:[L^2(\Gamma_S)] (respectively stem:[L^2(\Gamma_B)]). By taking the variables stem:[h_1=u^{*}] and stem:[h_2=-p^{*}] solution of <<stokes:adj1>> and <<stokes:adj2>>, and using <<dualderivative>>, we obtain
+
+[stem]
+++++
+\begin{align}
+    u^{*}=\alpha \qquad \text{on } \Gamma_S, \label{stokes:adj41}\\
+    u^{*}= 0 \qquad \text{on } \Gamma_B \label{stokes:adj42}.
+\end{align}
+++++
+
+Using the previous equations, we find the result.
+====
+
+.Lemma 2
+[.lem#stockes:lagmult]
+****
+The Lagrange multipliers associated with <<stokes:adjpb>> are
+[stem]
+++++
+\begin{equation}\label{stockes:lagmult}
+\begin{cases}
+\lambda^{*} = -2\mu e(u^{*})n-p^{*}n &\qquad \text{on } \Gamma_S,\\
+\beta^{*} = -2\mu e(u^{*})n - p^{*}n &\qquad \text{on } \Gamma_B.
+ \end{cases}  
+\end{equation}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Let's derive stem:[\mathcal{L}_{\alpha}] w.r.t stem:[v]. For all stem:[\phi \in H^1(\mathbb{R}^N)], then
+[stem]
+++++
+\begin{equation}
+    \left\langle \frac{\partial \mathcal{L}_{\alpha}}{\partial v},\phi \right\rangle =  \int_{\Gamma_S}\sigma(\phi,0)n\cdot \alpha  +\int_{\Omega}-\mu\Delta \phi \cdot h_1 + h_2\nabla \cdot \phi + \int_{\Gamma_S} \lambda \cdot v + \int_{\Gamma_B}\beta \cdot v.
+\end{equation}
+++++
+
+By applying the <<stokes:ipp>> twice, we have
+
+[stem]
+++++
+\begin{multline*}
+\left\langle \frac{\partial \mathcal{L}_{\alpha}}{\partial v},\phi \right\rangle = -\int_{\Omega}\mu \left[\Delta h_1 + \nabla(\nabla \cdot h_1) +\nabla h_2\right]\cdot \phi + \int_{\Omega}\mu \nabla(\nabla\cdot \phi)\cdot h_1  + \int_{\partial \Omega}h_2(n\cdot \phi)\\+2\mu\int_{\partial \Omega} e(h_1)n\cdot \phi-e(\phi)n\cdot h_1 + \int_{\Gamma_B}\beta \cdot \phi+\int_{\Gamma_S} \lambda\cdot \phi +2\mu e(\phi)n\cdot \alpha.
+\end{multline*}
+++++
+
+Let us take the test functions stem:[\phi] with zero divergence such that stem:[e(\phi)n] vanishes on stem:[\partial \Omega] and stem:[\phi] describes stem:[L^2(\Gamma_S)] (respectively stem:[L^2(\Gamma_B)]). By taking the variables stem:[h_1=u^{*}] and stem:[h_2=-p^{*}] solution of <<stokes:adjpb>>, and using <<dualderivative>>, we obtain
+
+[stem]
+++++
+\begin{align}
+    2\mu e(u^{*})n + p^{*}n + \lambda = 0 \qquad \text{on } \Gamma_S, \label{stokes:adj31}\\
+    2\mu e(u^{*})n + p^{*}n + \beta = 0 \qquad \text{on } \Gamma_B \label{stokes:adj32}.
+\end{align}
+++++
+
+Hence the result.
+====
+
+.Lemma 3
+[.lem#Prop:divnul]
+****
+Let stem:[u] be the solution to problem <<stokes:edp>>, then
+
+[stem]
+++++
+\begin{equation*}
+    n\cdot \nabla (u-U)n= \nabla \cdot (u-U)=0.
+\end{equation*}
+++++
+
+The relation is also valid for stem:[u=u^{*}] solution of the problem <<stokes:adjpb>>.
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<moreau_shapes_2022>>, proof of Proposition 1] by taking the other convention for the normal.
+====
+
+
+.Lemma 4
+[.lem#Prop:astucestokes]
+****
+Let stem:[u] be the solution to problem <<stokes:edp>> and stem:[u^{*}] solution to problem <<stokes:adjpb>>, then 
+[stem]
+++++
+\begin{equation*}
+    e(u^{*})n\cdot \nabla (u-U)n = e(u^{*}):e(u-U).
+\end{equation*}
+++++
+The relation is also valid by exchanging the role of stem:[u] and stem:[u^{*}], and by taking stem:[U=\alpha].
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<moreau_shapes_2022>>, proof of Proposition 1] by taking the other convention for the normal.
+====
+
+.Lemma 5
+[.lem#Prop:dfsigma]
+****
+Let stem:[(u^{*},p^{*})] solution to problem <<stokes:adjpb>>, stem:[u] solution to problem <<stokes:edp>> and stem:[f] such as 
+
+[stem]
+++++
+\begin{equation}
+    f(\Omega)=-\int_{\partial \Omega}\sigma(u^{*},\pm p^{*})n\cdot (u-U),
+\end{equation}
+++++
+
+then we have
+
+[stem]
+++++
+\begin{equation*}
+    Df(\Omega)(\theta)=-2\mu\int_{\Gamma_S}\theta\cdot n \left[e(u^{*}):e(u-U)\right].
+\end{equation*}
+++++
+
+The relation is also valid by exchanging the role of stem:[(u,p)] and stem:[(u^{*},p^{*})] , and by taking stem:[U=\alpha].
+****
+
+.Proof
+[%collapsible.proof]
+====
+To simplify, we will note stem:[a_{\pm}=\sigma(u^{*},\pm p^{*})n]. Using the fact that stem:[\Gamma_S] is fixed and <<Prop:diffJpartialOmega>>, we obtain
+
+[stem]
+++++
+\begin{equation*}
+    Df(\Omega)(\theta)=-\int_{\Gamma_S}\theta\cdot n \left[\nabla\left(a_{\pm}\cdot (u-U)\right)\cdot n + (\nabla \cdot n)a_{\pm}\cdot (u-U)\right].
+\end{equation*}
+++++
+
+Thanks to the boundary conditions, the last term vanishes and we have
+
+[stem]
+++++
+\begin{equation*}
+    Df(\Omega)(\theta)=-\int_{\Gamma_S}\theta\cdot n \left[\nabla\left(a_{\pm}\cdot (u-U)\right)\cdot n\right].
+\end{equation*}
+++++
+
+However, we have that stem:[\nabla \left(a_{\pm}\cdot (u-U)\right)\cdot n = (\nabla a_{\pm})(u-U)\cdot n +\nabla (u-U)a_{\pm} \cdot n]. Thus, injecting this equation into the above integral while neglecting the terms due to the boundary conditions, we obtain 
+
+[stem]
+++++
+\begin{align*}
+    Df(\Omega)(\theta) &=-\int_{\Gamma_S}\theta\cdot n\left[\nabla(u-U)a_{\pm}\cdot n\right]\\
+    &=-\int_{\Gamma_S}\left[2\mu e(u^{*})\nabla (u-U)n\cdot n \pm p \nabla(u-U)n\cdot n\right].
+\end{align*}
+++++
+
+
+<<Prop:divnul>> allows us to vanish the last term when the first term can be rewritten using <<Prop:astucestokes>>, which gives us
+
+[stem]
+++++
+\begin{equation*}
+    Df(\Omega)(\theta)=-2\mu\int_{\Gamma_S}\theta\cdot n\left[ e(u^{*}):e(u-U)\right].
+\end{equation*}
+++++
+
+The reasoning is exactly the same when we exchange the roles of stem:[(u,p)] and stem:[(u^{*},p^{*})], and by taking stem:[U=\alpha].
+====
+
+.Shape gradient for the rigid object in Stokes flow problem
+[.prop]
+****
+We have the following shape gradient 
+
+[stem]
+++++
+\begin{equation}
+    G(\Omega)=-2\mu\left[e(u^{*}):e(u)-e(u):e(\alpha)-e(u^{*}):e(U)\right].
+\end{equation}
+++++
+
+Of particular note, if we assume the that stem:[U] and stem:[\alpha] are taking in table of entries of grand resistance tensor, then
+
+[stem]
+++++
+\begin{equation}
+    G(\Omega)=-2\mu e(u^{*}):e(u).
+\end{equation}
+++++
+****
+
+
+.Proof
+[%collapsible.proof]
+====
+We apply the Cea's method assuming all the necessary regularities. We thus obtain 
+
+[stem#stokes:Lreform]
+++++
+\begin{multline}
+    \mathcal{L}_{\alpha}(\Omega,v,h_1,\lambda,\beta,q,h_2)=\int_{\Gamma_S}\sigma(v,q)n\cdot \alpha + \int_{\Omega}\left[-\mu \Delta v + \nabla q\right]\cdot h_1 + \int_{\Omega}(\nabla \cdot v)h_2 \\
+    +\int_{\Gamma_S}\lambda \cdot (v-U) + \int_{\Gamma_B}\beta \cdot (v-U^{\infty}).
+\end{multline}
+++++
+
+By taking as variables in the derivative of the Lagrangian the solutions of the primal problem stem:[(u,p)] and of the dual problem stem:[(u^{*},p^{*})], the terms stem:[-\Delta u + \nabla p] as well as the divergence of stem:[u] and stem:[u^{*}] vanish. Moreover, since the boundary stem:[\Gamma_B] is fixed, by deriving all the integrals stem:[\Gamma_B] cancel out. Thus, we obtain the following relationship :
+
+[stem]
+++++
+\begin{equation*}
+    \frac{\partial \mathcal{L}_{\alpha}}{\partial \Omega}(\Omega,u,u^{*},\lambda^{*},\beta^{*},p,-p^{*})(\theta)= Df(\Omega)(\theta)+Dg(\Omega)(\theta),
+\end{equation*}
+++++
+
+with
+
+[stem]
+++++
+\begin{equation*}
+f(\Omega)=\int_{\Gamma_S}\sigma(v,q)n\cdot \alpha \quad \text{and}\quad 
+        g(\Omega)=\int_{\Gamma_S}\lambda\cdot (v-U).
+\end{equation*}
+++++
+
+To derive the function stem:[f] and stem:[g], we use Proposition <<Prop:dfsigma>>. Thus, we have
+
+[stem]
+++++
+\begin{equation*}
+   \frac{\partial \mathcal{L}_{\alpha}}{\partial \Omega}(\Omega,u,u^{*},\lambda^{*},\beta^{*},p,-p^{*})(\theta)=2\mu \int_{\Gamma_S} \theta \cdot n \left[e(u):e(\alpha)-e(u^{*}):e(u-U)\right].
+\end{equation*}
+++++
+
+Finally, we obtain that 
+
+[stem]
+++++
+\begin{equation}\label{stokes:shaped}
+    DJ(\Omega)(\theta)=-2\mu \int_{\Gamma_S}\theta \cdot n \left[e(u^{*}):e(u)-e(u):e(\alpha)-e(u^{*}):e(U)\right].
+\end{equation}
+++++
+
+Hence the results.
+
+====
+
+
+
+
+
+==== Experimental Evaluation
+
+To align with the findings in <<moreau_shapes_2022>>, we initially consider a sphere as the solid at the center of the fluid domain. The primal and dual problems are solved using stem:[\mathbb{P}_2] continuous finite elements for velocity and stem:[\mathbb{P}_1] continuous finite elements for pressure. The expansion problem solution is also expressed with a stem:[\mathbb{P}_1] continuous finite elements. It is important to keep in mind that our assumptions differ from those in the paper <<moreau_shapes_2022>>. In particular, we assume that the stem:[\Gamma_B] edge is infinitely far from the stem:[\Gamma_S] edge, which is not achievable using finite elements. Consequently, the obtained results may differ. The results obtained for the GD method and the NSGF method will be presented.
+
+*2D simulation for stem:[K_{11}] case :* 
+
+We consider the 2D stem:[K_{11}] resistance problem. The initial fluid domain is a square with a spherical hole at its center. The parameter values chosen are described in the following table and with the following initial domain.
+
+.Initial geometry for the 2D case of Stokes.
+image::stokes/2D_stokes_init.png[width=400]
+
+.Geometric and physics parameters of the initial domain for the 2D case of Stokes. The viscosity of the fluid is designed by stem:[\mu]. stem:[C] represents the center of the sphere and the box, stem:[R] the radius of the sphere and stem:[L] the side length of the box.
+|===
+
+|Symbol |Value (dimensionless) 
+
+|stem:[\mu] | stem:[1]
+|stem:[C] | stem:[(0,0)]
+|stem:[R] | stem:[1]
+|stem:[L] | stem:[10]
+
+|===
+
+
+For this specific test case, we employed an initial discretization of stem:[h=0.2] around the spherical surface and stem:[h=1] around the square. The optimization parameters we selected were stem:[l=20], stem:[a=b=0.5], and stem:[c=1e3]. In the NSGF method, remeshing plays a crucial role, particularly in the 2D case. To avoid convergence issues, we fixed the mesh at the edge of the solid, as the deformation was not significant. Consequently, the initial mesh was much more refined, with stem:[h=0.05] at the solid boundary. 
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the resistance problem stem:[K_{11}] in 2D.
+|===
+
+|Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
+
+|GD | stem:[16.7729] | stem:[14.2940] | stem:[5.2101e-05] | stem:[1.0154e-4] | stem:[500]
+|NSGF | stem:[16.9087] | stem:[14.5917] | stem:[1.1554e-3] | stem:[3.3883e-4] | stem:[500]
+
+|===
+
+
+image::stokes/results_sphere2D-2D-l20-t0.01-h0.2-a0.5b0.5-c1000-n500.png[width=700]
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_n] and the stem:[H^1]-norm of stem:[\theta_n] for the 2D stem:[K_{11}] resistance problem with the GD method (top) and the NSGF method (bottom).
+image::stokes/results_nsgf_t-2D-h0.05-n020-n500.png[width=700]
+
+.Initial domain (left) and final domain (right) for the GD method.
+image::stokes/2D_stokes_initfinal.png[width=700]
+   
+The shape obtained in 2D closely resembles a rugby ball, as described in <<moreau_shapes_2022>>. It effectively preserves the initial volume and achieves a lower cost function compared to the initial domain. The results obtained with the two methods exhibit striking similarity. 
+
+*3D simulations for various resistance problem :*
+
+The initial fluid representation is a cube with a spherical hole at its center.
+
+.Geometric and physics parameters of the initial domain for the 3D case of Stokes. The viscosity of the fluid is designed by stem:[\mu]. stem:[C] represents the center of the sphere and the box, stem:[R] the radius of the sphere and stem:[L] the side length of the box.
+|===
+
+|Symbol |Value (dimensionless) 
+
+|stem:[\mu] | stem:[1]
+|stem:[C] | stem:[(0,0,0)]
+|stem:[R] | stem:[1]
+|stem:[L] | stem:[10]
+
+|===
+
+
+The parameter values chosen are described in the table below.
+
+.Illustration of the stokes problem. The stem:[\Gamma_B] boundary is fixed. The stem:[\Gamma_S] boundary is movable in order to optimize the shape.
+image::stokes/3D_stokes_init.png[width=400]
+    
+In the following sections, we investigate the cases stem:[K_{11}], stem:[K_{12}], stem:[Q_{11}], stem:[Q_{12}], and stem:[C_{11}] to compare our results with those presented in <<moreau_shapes_2022>>. For all simulations except the stem:[Q_{12}] case, we use the optimization parameters stem:[t=0.03], stem:[l=20], stem:[a=b=0.5], and stem:[c=1e3]. In the stem:[Q_{12}] case, we employ stem:[t=5e-4], stem:[l=20], stem:[a=b=0.5], and stem:[c=1e5].
+
+_stem:[K_{11}] resistance problem :_ 
+
+
+Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the resistance problem stem:[K_{11}] in 3D. 
+|===
+
+|Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
+
+|GD | stem:[29.6246] | stem:[27.2228] | stem:[2.9460e-4] | stem:[5.0356e-4] | stem:[125]
+|NSGF | stem:[29.6246] | stem:[27.6108] | stem:[1.0395e-2] | stem:[6.6623e-2] | stem:[33]
+
+|===
+
+
+image::stokes/results_K11-3D-l20-t0.03-h0.2-a0.5b0.5-c1000-n500.png[width=700]
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_n] and the stem:[H^1]-norm of stem:[\theta_n] for the 3D stem:[K_{11}] resistance problem with the GD method (top) and the NSGF method (bottom).
+image::stokes/results_nsgf_tK11-3D-h0.2-n020-n502.png[width=700]
+
+
+.stem:[K_{11}] simulation for the GD method.
+video::K113D.mp4[width=700,opts="autoplay, loop"]
+
+
+We successfully achieve the optimal rugby ball shape while preserving volume and reducing the cost function. The NSGF method seems to be highly sensitive to remeshing, particularly at the ends, resulting in a shape reminiscent of a lemon. As a result, the simulation needs to be terminated before the mesh collapses at the ends. 
+ 
+_stem:[K_{12}] resistance problem :_
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the resistance problem stem:[K_{12}] in 3D. 
+|===
+
+|Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
+
+|GD | stem:[-0.0188] | stem:[-18.3755] | stem:[0.2041] | stem:[9.1405e-2] | stem:[45]
+|NSGF | stem:[-0.0188] | stem:[-17.9411] | stem:[8.5382e-3] | stem:[2.5186e-3] | stem:[850]
+
+|===
+
+image::stokes/results_K12-3D-l20-t0.03-h0.2-a0.5b0.5-c1000-n500.png[width=700] 
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_n] and the stem:[H^1]-norm of stem:[\theta_n] for the 3D stem:[K_{12}] resistance problem with the GD method (top) and the NSGF method (bottom).
+image::stokes/results_nsgf_tK12_Bfixed-3D-h0.2-n020-n1000.png[width=700]
+
+.stem:[K_{12}] simulation for the GD method.
+video::K123D.mp4[width=700,opts="autoplay, loop"]
+
+As depicted in the previous figures, the simulations are terminated before the cost function reaches a local minimum due to mesh collapse. There are minimal differences in the final shape obtained between the two methods. Nevertheless, we manage to achieve a shape that closely resembles the one presented in the reference article, although it should be noted that the problem we are studying differs slightly as the boundary is at a finite distance from the rigid object.  
+
+_stem:[Q_{11}] resistance problem :_
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the resistance problem stem:[Q_{11}] in 3D. 
+|===
+
+|Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
+
+|GD | stem:[24.1304] | stem:[16.9092] | stem:[5.4293e-3] | stem:[5.0132e-3] | stem:[500]
+|NSGF | stem:[24.1304] | stem:[16.9188] | stem:[5.7716e-3] | stem:[1.7381e-3] | stem:[873]
+
+|===
+
+
+image::stokes/results_Q11-3D-l20-t0.03-h0.2-a0.5b0.5-c1000-n500.png[width=700]
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_n] and the stem:[H^1]-norm of stem:[\theta_n] for the 3D stem:[Q_{11}] resistance problem with the GD method (top) and the NSGF method (bottom).
+image::stokes/results_nsgf_tQ11_Bfixed-3D-h0.2-n020-n1000.png[width=700]
+ 
+.stem:[Q_{11}] simulation for the GD method.
+video::Q113D.mp4[width=700,opts="autoplay, loop"]
+
+
+In this case, premature termination of the simulation is less evident, and convergence is observed with good volume retention. The shapes obtained are virtually identical between the two resolution methods. However, a notable observation is that the ends of the object approach the edges of the cube until they collide with them. This phenomenon is not observed when the cube boundaries are assumed to be at infinity, as depicted in <<moreau_shapes_2022>>.
+
+_stem:[Q_{12}] resistance problem :_
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the resistance problem stem:[Q_{12}] in 3D. 
+|===
+
+|Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
+
+|GD | stem:[-9.0952e-3] | stem:[-323.3069] | stem:[3.9189e-2] | stem:[3.7323e-2] | stem:[980]
+|NSGF | stem:[-9.0952e-3] | stem:[-234.4491] | stem:[1.5241e-2] | stem:[6.3734e-3] | stem:[1000]
+
+|===
+
+
+image::stokes/results_Q12-3D-l20-t0.0005-h0.2-a0.5b0.5-c100000-n1000.png[width=700]
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_n] and the stem:[H^1]-norm of stem:[\theta_n] for the 3D stem:[Q_{12}] resistance problem with the GD method (top) and the NSGF method (bottom).
+image::stokes/results_nsgf_tQ12_Bfixed-3D-h0.2-n020-n1000.png[width=700]
+ 
+.stem:[Q_{12}] simulation for the GD method.
+video::Q123D.mp4[width=700,opts="autoplay, loop"]
+   
+
+The boundary of the cube plays a significant role in the obtained results. Contrary to the expected dumbbell shape, we observe the ends of the solid flattening, leading to mesh collapse and an abrupt termination of the simulation. Additionally, these ends are positioned too closely to the cube boundary, resembling the observations made in the stem:[Q_{11}] case. The shapes obtained using the two different methods exhibit a notable similarity. 
+
+_stem:[C_{11}] resistance problem :_
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the resistance problem stem:[C_{11}] in 3D. 
+|===
+
+|Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
+
+|GD | stem:[2.7004e-3] | stem:[-1.2593] | stem:[4.2977e-2] | stem:[4.4303e-2] | stem:[74]
+|NSGF | stem:[2.7004e-3] | stem:[-1.7085] | stem:[9.7921e-4] | stem:[1.2600e-3] | stem:[450]
+
+|===
+
+
+image::stokes/results_C11-3D-l20-t0.03-h0.2-a0.5b0.5-c1000-n500.png[width=700]
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_n] and the stem:[H^1]-norm of stem:[\theta_n] for the 3D stem:[C_{11}] resistance problem with the GD method (top) and the NSGF method (bottom).
+image::stokes/results_nsgf_tC11_Bfixed-3D-h0.2-n020-n1000.png[width=700]
+
+
+.stem:[C_{11}] simulation for the GD method.
+video::C113D.mp4[width=700,opts="autoplay, loop"]
+
+
+Mesh collapse continues to be evident in this case, mainly due to sharp edges forming in specific regions. However, the dynamics align with the description provided in <<moreau_shapes_2022>>, and volume conservation is satisfactory. Interestingly, we observe the emergence of four blades on the solid, each with varying prominence. It is worth noting that the difference between the two methods is apparent in figure below, where the blades are not necessarily in the same positions.
+
+.The black wireform corresponds to the result obtained using the GD method. The grey surface is the shape obtained using the NSGF method.
+image::stokes/C11_blades.png[width=400]
+
+
+
+
+== Implementation in Feel++
+
+include::partial$bib-geoshapeopti.adoc[]

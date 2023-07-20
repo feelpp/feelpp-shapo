@@ -6,4 +6,4 @@
 ** xref:githubactions.adoc[Github Actions]
 ** xref:rename.adoc[Renaminge the project]
 * xref:optimisationStokes.adoc[Shape optimisation in Stokes flow]
-
+* xref:geometricshapeopti.adoc[Geometric Shape Optimisation]

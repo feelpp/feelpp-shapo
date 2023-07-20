@@ -1,0 +1,13 @@
+[bibliography]
+= References on geometric shape optimisation 
+
+- [[[internship_Palazzolo]]] Lucas Palazzolo. _Shape optimization for rigid objects in Stokes flow_. Stage de M2, Univerité de Strasbourg/Inria Sophia-Antipolis, 2023. https://github.com/feelpp/stage.lucas[repo]
+
+- [[[allaire_conception_2006]]]  Grégoire Allaire. _Conception optimale de structures_. volume 58 of Mathématiques & applications. Springer Berlin Heidelberg, 2006 
+
+- [[[cea_conception_1986]]] Jean Céa. _Conception optimale ou identification de formes, calcul rapide de la dérivée directionnelle de la fonction coût._ M2AN - Modélisation mathématique et analyse numérique, 20(3):371-402, 1986
+
+- [[[moreau_shapes_2022]]] Clément Moreau, Kenta Ishimoto and Yannick Privat. _Shapes optimising grand resistance tensor entries for a rigid body in a Stokes flow_. July 2022
+
+- [[[feppon_shape_2019]]] Florian Feppon. _Shape and topology optimization of multiphysics systems_. These de doctorat, Université Paris-Saclay (ComUE), Dec. 2019
+
