@@ -1,13 +1,10 @@
-= {feelpp} {shapo} Project
+= Shape Optimisation
+:page-layout: case-study
+:page-tags: toolbox
+:page-illustration: stokes/3D_stokesK11_initfinal.png
+:description: Shape optimisation is used to solve geometric shape optimisation problems.
 
-This is a {feelpp} Template Project. 
-It serves as a template for {feelpp} projects.
 
-The features include
-
-* xref:cmake.adoc[cmake environment]
-* xref:antora.adoc[antora environment]
-* xref:vscode.adoc[vscode integration]
 
 
 

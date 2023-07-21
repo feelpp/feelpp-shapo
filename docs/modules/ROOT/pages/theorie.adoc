@@ -1,0 +1,875 @@
+= Theory of Geometric Shape Optimisation
+:page-tags: manual
+:description: Geometric Shape Optimisation theory
+:page-illustration: shape_opti_principle.png
+:stem: latexmath
+:toc:
+
+
+This introduction to geometric shape optimisation is based on Lucas Palazzolo's course. For more details, see <<internship_Palazzolo>>.
+
+== Introduction
+
+Shape optimization is a field of study that focuses on finding the best possible shape for a given object or system in order to optimize certain performance criteria or objectives which are typically a function of differential equations defined on the shape itself. The optimisation problem can be written as 
+
+[stem]
+++++
+\begin{equation*}
+    \inf_{\Omega \in \Omega_{ad}}J(\Omega, u(\Omega))
+\end{equation*}
+++++
+with stem:[u] solution of a PDE defined on the domain stem:[\Omega]. 
+
+Geometric shape optimization focuses on directly modifying the shape of an object to achieve the desired objectives via a non-parametric deformation field stem:[\theta]. It involves manipulating the geometry of the object to improve its performance. We consider a reference domain stem:[\Omega_0], which we assume to be a regular bounded open subset of stem:[\mathbb{R}^N]. Let stem:[\partial \Omega_0] the boundary of this domain. We denote with stem:[\theta] the deformation applied to the initial domain to get the new domain stem:[\Omega], i.e.
+
+[stem]
+++++
+\begin{equation*}
+    \Omega = (\textrm{Id} + \theta)(\Omega_0).
+\end{equation*}
+++++
+
+This deformation is illustrated in the following figure where a deformation field is applied to a reference domain.
+
+.Shape optimisation principle : the stem:[\Omega_0] domain is deformed according to a deformation field stem:[\theta] such that the new stem:[\Omega] domain is given by stem:[\Omega = (\textrm{Id} + \theta)(\Omega_0)].
+image::shape_opti_principle.png[width=700]
+
+In the pursuit of finding shape derivative of the cost function, a well-known method called Cea's method, developed by Cea in <<cea_conception_1986>>, proves to be both simple and effective. However, it should be noted that Cea's method is considered a _formal_ approach as it relies on certain assumptions regarding the regularity of the problem's data. We look at the numerical solution of these two problems using two numerical methods : the gradient descent <<allaire_conception_2006>> and the null space gradient flow <<feppon_shape_2019>>. 
+
+The gradient descent method is a classic method for solving geometric shape optimisation problems. In this method, an initial shape is iteratively modified by moving in the direction of the negative gradient of the objective function. The process continues until convergence to an optimal shape is achieved. The null space gradient flow method involves finding the shape that minimizes the objective function while satisfying a set of constraints. It utilizes the notion of null space and range space directions to guide the shape optimization process.
+
+
+=== Definitions
+
+As presented in <<allaire_conception_2006>>, in order to describe the set of admissible forms, we need to introduce the following set of diffeomorphisms.
+
+.Definition : Deformation of the identity
+[.def#setT]
+****
+We define a space of diffeomorphisms on stem:[\mathbb{R}^N] (which can be seen as a deformation of the identity) by
+[stem]
+++++
+\begin{equation*}
+\mathcal{T} = \left\{ T \mid (T-\textrm{Id})\in W^{1,\infty}(\Omega, \mathbb{R}^N) \text{ and } (T^{-1}-\textrm{Id})\in W^{1,\infty}(\Omega, \mathbb{R}^N)  \right\}.
+\end{equation*}
+++++
+****
+
+Now we can clarify the admissible shapes obtained by deformation of stem:[\Omega_0], that are defined by the following set.
+
+.Definition : The set of admissible shapes
+[.def]
+****
+The set of _admissible shapes_ obtained by deformation of stem:[\Omega_0] is given by 
+[stem]
+++++
+\begin{equation*}
+    C(\Omega_0)=\left\{\Omega \subset \mathbb{R}^N \mid \exists T \in \mathcal{T}, \quad \Omega=T(\Omega_0) \right\},
+\end{equation*}
+++++
+where stem:[\mathcal{T}] is defined by <<setT>>.
+****
+
+
+In view of the above definitions, it is natural to consider the vector field stem:[\theta] such as
+
+[stem]
+++++
+\begin{equation*}
+    T = \textrm{Id} + \theta \qquad \text{with} \qquad \theta \in W^{1,\infty}(\Omega, \mathbb{R}^N) ~ \text{and} ~ T \in \mathcal{T}.
+\end{equation*}
+++++
+
+In order to be able to define a differentiability notion in stem:[\Omega_0] with respect to stem:[\theta], we need the following lemma which guarantees that if stem:[\theta] is small enough then stem:[T= \textrm{Id} + \theta] is indeed a diffeomorphism which belongs to stem:[\mathcal{T}].
+
+.Lemma 1
+[.lem]
+****
+For all stem:[\theta \in W^{1,\infty}(\Omega, \mathbb{R}^N)] that verify stem:[\|\theta\|_{W^{1,\infty}(\Omega, \mathbb{R}^N)}<1], the map stem:[T=\textrm{Id}  +\theta] is a bijection of stem:[\mathbb{R}^N] that belongs to stem:[\mathcal{T}] defined by <<setT>>.
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<allaire_conception_2006>>, Lemma 6.13]
+====
+
+
+All that remains is to define the notion of differentiability in relation to the domain that we call shape derivation or differentiability with respect to the domain. The following definition applies to differentiability in the Fréchet sense as well as in the Gâteaux sense.
+
+.Definition : Differentiability with respect to the domain
+[.def#difdomaine]
+****
+Let stem:[J(\Omega)] a map such that stem:[J : C(\Omega_0) \to \mathbb{R}]. stem:[J] is said to be differentiable with respect to the domain on stem:[\Omega_0] if 
+[stem]
+++++
+\begin{equation*}
+    \theta \mapsto J\left((\textrm{Id} +\theta)(\Omega_0)\right)
+\end{equation*}
+++++
+is differentiable in 0 in the Banach space stem:[W^{1,\infty}(\Omega, \mathbb{R}^N).]
+****
+
+Let us introduce some notation to define the matrix scalar product.
+
+.Definition : Matrix scalar product
+[.def]
+****
+Let stem:[A] and stem:[B] be two real matrices of dimension stem:[N]. We define the scalar product of two matrices as 
+[stem]
+++++
+\begin{equation*}
+    A : B = tr(A^TB).
+\end{equation*}
+++++
+and we will note thereafter stem:[\|\cdot \|] the associated norm.
+****
+
+
+.Definition 
+[.def]
+****
+We denote
+[stem]
+++++
+\begin{equation*}
+    H^{k}_{\Gamma}(\Omega) = \left\{v \in H^{k}(\Omega) \mid v|_{\Gamma} = 0 \right\},
+\end{equation*}
+++++
+the set of functions belonging to stem:[H^{k}(\Omega)] and which vanish on stem:[\Gamma]. 
+****
+
+=== Derivation of integrals 
+
+In this subsection, <<difdomaine>> of differentiability with respect to the domain will be applied to volume or surface integrals. The paragraph will be brief, for more details we point the reader to <<allaire_conception_2006>>. We denote stem:[n] as the unit normal pointing outwards to the domain.
+
+.Proposition 1
+[.prop#Prop:diffJOmega]
+****
+Let stem:[\Omega_0] be a regular bounded open subset of stem:[\mathbb{R}^N]. Let stem:[f \in W^{1,1}(\mathbb{R}^N)] and stem:[J] be the map of stem:[C(\Omega_0)] in stem:[\mathbb{R}] defined by 
+[stem]
+++++
+\begin{equation*}
+    J(\Omega)=\int_{\Omega}f.
+\end{equation*}
+++++
+Then stem:[J] is differentiable in stem:[\Omega] and for all stem:[\theta \in W^{1,\infty}(\Omega,\mathbb{R}^N)] we have
+[stem]
+++++
+\begin{equation*}
+    DJ(\Omega)(\theta)=\int_{\Omega}\nabla \cdot \left(\theta f\right) = \int_{\partial \Omega}\theta\cdot n f.
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<allaire_conception_2006>>, Proposition 6.22]
+====
+
+.Propostion 2
+[.prop#Prop:diffJpartialOmega]
+****
+Let stem:[\Omega_0] be a regular bounded open subset of stem:[\mathbb{R}^N]. Let stem:[f \in W^{2,1}(\mathbb{R}^N)] and stem:[J] be the map of stem:[C(\Omega_0)] in stem:[\mathbb{R}] defined by 
+[stem]
+++++
+\begin{equation*}
+    J(\Omega)=\int_{\partial \Omega}f.
+\end{equation*} 
+++++
+Then stem:[J] is differentiable in stem:[\Omega] and for all stem:[\theta \in C^1(\mathbb{R}^N,\mathbb{R}^N)] we have 
+[stem]
+++++
+\begin{equation*}
+DJ(\Omega)(\theta)=\int_{\partial \Omega}\left(\nabla f \cdot \theta + f(\nabla \cdot \theta)-f(\nabla\theta n \cdot n)\right) = \int_{\partial \Omega}\theta \cdot n \left(\frac{\partial f}{\partial n}+(\nabla \cdot n)f\right).
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+See [<<allaire_conception_2006>>, Proposition 6.24 & Lemma 6.25]
+====
+
+
+[NOTE]
+====
+Note that we need stem:[\theta \in C^1(\mathbb{R}^N,\mathbb{R}^N)]. Indeed, we need to define the trace of stem:[\nabla \theta] on stem:[\partial \Omega], and therefore the hypothesis stem:[\theta \in W^{1,\infty}(\Omega,\mathbb{R}^N)] is not sufficient.
+====
+
+
+=== Derivation of domain-dependent functions and equations: Cea's method
+
+In the following, we consider a cost function stem:[J] (depending on a domain stem:[\Omega]) which we wish to minimize (or maximize) by finding the shape of the optimal domain. Additionally, we assume that stem:[J] relies on a variable stem:[u], which is a solution to a specific differential equation defined on the domain stem:[\Omega]. Consequently, it becomes necessary to differentiate the cost function and the differential equation with respect to the domain.
+
+A simple and efficient method for calculating values is the Cea's method developed in <<cea_conception_1986>>. This method also allows us to "guess" the definitions of the adjoint state stem:[p]. However, it is important to note that this method is _formal_, as it relies on certain assumptions about the regularities of the problem's data, particularly concerning the solution stem:[u]. For more rigorous calculations, the use of Eulerian and Lagrangian derivatives, as described in <<allaire_conception_2006>>, becomes necessary. This method incorporates the concepts of the primal problem or state problem, the dual problem or adjoint problem, and the Lagrangian. The problem is presented as follows.
+
+*Cost Function :* Let stem:[J] be a (domain-dependent) cost function that we seek to minimize (or maximize) such that 
+
+[stem]
+++++
+\begin{equation*}
+ \begin{array}{rcl}
+J:C(\Omega_0)&\to& \mathbb{R}\\
+\Omega &\mapsto &J(\Omega, u(\Omega)),
+\end{array}
+\end{equation*}
+++++
+where stem:[J] _depends_ of the solution stem:[u] of a differential equation. For ease of reading, we omit the stem:[u] in the notation of the cost function. We seek to solve the following problem
+
+[stem]
+++++
+\begin{equation*}
+    \inf_{\Omega \in \Omega_{ad}} J(\Omega),
+\end{equation*}
+++++
+where stem:[\Omega_{ad}] corresponds to the admissible domains.
+
+*Primal Equation :* Let stem:[u] be the solution of a problem, called a state problem or primal problem. Let stem:[E] be the map governing the variational formulation associated with the primal problem such that 
+
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+E:V\times V&\to& \mathbb{R}\\
+(v,q) &\mapsto &E(v,q),
+\end{array}
+\end{equation*}
+++++
+where stem:[V] is, in our case, a Sobolev space. Then, by definition of the weak formulation, for all stem:[q \in V] we have 
+
+[stem]
+++++
+\begin{equation*}
+    E(u,q)=0,
+\end{equation*}
+++++
+with stem:[u] the solution of the primal problem.
+
+*The Lagrangian :* The Cea's method is based on duality. For this purpose, we consider the primal equation as a constraint and introduce the following Lagrangian.
+
+.Definition : Lagrangian without Dirichlet condition
+[.def]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+\mathcal{L}:C(\Omega_0)\times V\times V&\to& \mathbb{R}\\
+(\Omega, v,q) &\mapsto &J(\Omega) + E(v,q),
+\end{array}
+\end{equation*}
+++++
+which is the sum of the objective function and the variational formulation of the primal equation.
+****
+
+[NOTE]
+====
+We must not forget that stem:[J] also depends on stem:[v] ! It is absolutely important for the following to consider that the three variables are independent of each other. Thus, the space stem:[V] must be independent of the domain stem:[\Omega]. 
+====
+
+When the state problem has a Dirichlet condition, we must add another Lagrange multiplier, as explained in <<allaire_conception_2006>>.
+
+.Deifnition : Lagrangian with Dirichlet condition
+[.def]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+\mathcal{L}:C(\Omega_0)\times V\times V\times V&\to& \mathbb{R}\\
+(\Omega, v,q, \psi) &\mapsto &J(\Omega) + E(v,q) + F(v,\psi),
+\end{array}
+\end{equation*}
+++++
+where stem:[F] represents the constraint associated with the Dirichlet condition.
+****
+
+To simplify the following, we will assume that stem:[E] and stem:[F] are bilinear. We then quickly obtain the different equations and the gradient of stem:[J] (assuming all the necessary regularities). 
+
+
+.Proposition : Primal problem thanks to the Lagrangian
+[.prop#primalderivative]
+****
+For all stem:[(q,\phi) \in V^2]
+
+[stem]
+++++
+\begin{equation}
+    \left\langle\frac{\partial \mathcal{L}}{\partial q}(\Omega, u, q),\phi \right\rangle = 0,
+\end{equation}
+++++
+with stem:[u] solution of the primal problem, i.e. for all stem:[\phi \in V]
+
+[stem]
+++++
+\begin{equation}
+    E(u,\phi) = 0,
+\end{equation}
+++++
+by bilinearity of stem:[E]. This results in stem:[u] being the solution to the variational formulation of the primal problem.
+****
+
+
+
+.Proposition : Dual problem thanks to the Lagrangian
+[.prop#dualderivative]
+****
+For all stem:[(v,\phi)\in V^2], we have 
+[stem]
+++++
+\begin{equation}
+    \left\langle \frac{\partial \mathcal{L}}{\partial v}(\Omega, v, p),\phi \right\rangle = 0,
+\end{equation}
+++++
+with stem:[p] solution of the dual problem, i.e. for all stem:[\phi \in V]
+
+[stem]
+++++
+\begin{equation}
+    E(\phi, p)+ \frac{\partial J}{\partial v}(\Omega)(\phi) = 0,
+\end{equation}
+++++
+by bilinearity of stem:[E] and by the fact that stem:[J] also depends on stem:[v]. This results in stem:[p] being solution to the weak formulation of the dual problem. 
+****
+
+.Proposition : Differential of the cost fucntion thanks to the Lagrangian
+[.prop#lagmethod:gradientJ]
+****
+For all stem:[\theta] in V, we have
+[stem]
+++++
+\begin{equation}
+    DJ(\Omega)(\theta)=\frac{\partial \mathcal{L}}{\partial \Omega}(\Omega, u(\Omega), p(\Omega))(\theta).
+\end{equation}
+++++
+with stem:[u] and stem:[p] solution of the primal and dual problem.
+****
+
+.Proof
+[%collapsible.proof]
+====
+Since stem:[u(\Omega)] is a solution of the primal problem and thus vanishes the weak formulation, we have 
+
+[stem]
+++++
+\begin{equation*}
+    \mathcal{L}(\Omega, u(\Omega), q) = J(\Omega) \qquad \forall q\in V.
+\end{equation*}
+++++
+
+The key point is that this is valid for all stem:[q] in stem:[V]. Thus, we can take stem:[q] in particular in the following as the solution of the dual problem (similarly for Lagrange multipliers in the case of Dirichlet conditions). To emphasize the dependence of the solution stem:[u] on the domain, we write stem:[u(\Omega)]. By independence of the variable stem:[q] with respect to stem:[\Omega] and deriving this relation using chain rule (always assuming that we have the necessary regularities to do so), we get
+
+[stem]
+++++
+\begin{equation*}
+    DJ(\Omega)(\theta) = \frac{\partial \mathcal{L}}{\partial \Omega}\left(\Omega, u(\Omega), q\right)(\theta) + \left\langle \frac{\partial \mathcal{L}}{\partial v}\left(\Omega, u(\Omega), q\right), u'(\Omega)(\theta) \right\rangle.
+\end{equation*}
+++++
+By taking stem:[q=p(\Omega)] solution of the dual problem, the last term vanishes. Finally, we come to
+
+[stem]
+++++
+\begin{equation}
+    DJ(\Omega)(\theta)=\frac{\partial \mathcal{L}}{\partial \Omega}(\Omega, u(\Omega), p(\Omega))(\theta).
+\end{equation}
+++++
+====
+
+
+== Solution methods
+
+To minimize the cost function stem:[J(\Omega)], we differentiate according to the variable stem:[\theta] which parametrizes the form stem:[\Omega=(\textrm{Id}+\theta)(\Omega_0)]. In the various problems we study, certain boundaries will be assumed to be fixed, i.e. non-deformable, and noted stem:[\Gamma_{fixed}]. We denote stem:[\Gamma] the deformable part of stem:[\partial \Omega], thus
+
+[stem]
+++++
+\begin{equation*}
+    \partial \Omega = \Gamma \cup \Gamma_{fixed}.
+\end{equation*}
+++++
+
+In <<allaire_conception_2006>> a method is quickly defined for all cost functions whose derivative can be written as follows
+
+[stem]
+++++
+\begin{equation}\label{eq:DJ}
+ DJ(\Omega)(\theta)=\int_{\Gamma} \theta \cdot n G(\Omega), 
+\end{equation} 
+++++
+where stem:[G(\Omega)] is a function (which depends of the state and of the adjoint) which is called the shape gradient. In the following, we will assume that we are studying an optimisation problem with an equality constraint in order to preserve the volume of the domain. 
+
+.Definition : Set of admissible domains
+[.def#eq:Omegad]
+****
+The set of admissible domains, stem:[\Omega_{ad}], is given by
+[stem]
+++++
+\begin{equation}\label{eq:Omegad}
+\Omega_{ad}=\left\{\Omega \in C(\Omega_0) \mid \Gamma_{fixed}  \subset \partial \Omega, ~ g(\Omega)= 0\right\}
+\end{equation}
+++++
+with 
+stem:[g] the equality constraint for the volume conservation, written as 
+
+[stem]
+++++
+\begin{equation*}
+    \begin{array}{rcl}
+            g:V&\to& \mathbb{R}\\
+            \theta &\mapsto &|(\textrm{Id}  + \theta)(\Omega)|-|\Omega_0|.
+            \end{array}
+\end{equation*}
+++++
+****
+
+[NOTE]
+====
+By abuse of notation, the most of the time we write stem:[g(\Omega)] instead of stem:[g(\theta)]. 
+====
+
+The non-deformation constraints the boundaries stem:[\Gamma_{fixed}] are taken into account by simply imposing 
+
+[stem]
+++++
+\begin{equation*}
+\theta=0 \qquad \text{on} \qquad \Gamma_{fixed},  
+\end{equation*}
+++++
+i.e. we impose a null displacement field at these boundaries.
+
+
+.Proposition : Differential of the volume constraint
+[.prop#eq:Dg]
+****
+The differential of stem:[g], definined in <<eq:Omegad>>, is given by
+[stem]
+++++
+\begin{equation*}
+    \begin{array}{rcl}
+            Dg(\Omega):V&\to& \mathbb{R}\\
+            \theta &\mapsto &\int_{\Gamma}\theta \cdot n.
+            \end{array}
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+By using <<Prop:diffJOmega>> on stem:[g].
+====
+
+
+Two methods will be presented to solve this type of problems: gradient descent and Null Space Gradient Flow.
+
+=== Solution by a gradient descent method
+
+The gradient descent (GD) method is an optimization technique used to minimize a function iteratively. By taking a new form, stem:[\Omega_t], such as 
+
+[stem]
+++++
+\begin{equation*}
+\Omega_t=(\textrm{Id}+\theta_t)(\Omega_0) \qquad \text{with} \qquad \theta_t = -t G(\Omega_0)n , 
+\end{equation*}
+++++
+where stem:[t>0], we have
+
+[stem]
+++++
+\begin{equation*}
+ DJ(\Omega_0)(\theta_t)=-t\int_{\Gamma_0}G(\Omega_0)^2 <0.   
+\end{equation*}
+++++
+
+Thus, for a sufficiently small step size stem:[t], we have 
+
+[stem]
+++++
+\begin{equation*}
+ J(\Omega_{t}) < J(\Omega_0) \qquad \text{if} \qquad G(\Omega_0)\ne 0.   
+\end{equation*}
+++++
+
+It can be noted that to have stem:[DJ(\Omega_0)(\theta)<0], we need to choose stem:[\theta \cdot n >0]. Let stem:[l \in \mathbb{R}] a Lagrange multiplier for the volume constraint. The domain optimality condition, by using the Lagrange multiplier theorem, can be seen as 
+
+[stem]
+++++
+\begin{equation}\label{eq:Lm}
+DJ(\Omega)(\theta)+l Dg(\Omega)(\theta) = \int_{\Gamma} \theta \cdot n \left[l +G(\Omega)\right]  = 0.  
+\end{equation}
+++++
+
+
+*Numerical implementation :* For the numerical implementation, a domain sequence, stem:[\Omega_k], is computed which verifies the following constraints 
+
+[stem]
+++++
+\begin{equation*}
+   \partial \Omega_k = \Gamma_k \cup \Gamma_{fixed}. 
+\end{equation*}
+++++
+
+Let stem:[t>0] a fixed descent step,  as explained in <<allaire_conception_2006>> the following iterations are performed until convergence, for stem:[k\geq 0] :
+
+[stem]
+++++
+\begin{equation*}
+\Omega_{k+1} = (\textrm{Id} + \theta_k)(\Omega_k)
+\end{equation*}
+++++
+with 
+
+[stem]
+++++
+\begin{equation*}
+\theta_k = \begin{cases}
+-t\left[l_k+G(\Omega_k)\right]n_k &\qquad \text{on }  \Gamma_k \\
+0 &\qquad \text{on } \Gamma_{fixed}
+ \end{cases}
+\end{equation*}
+++++
+where stem:[n_k] is the normal vector of stem:[\partial \Omega_k] and stem:[l_k \in \mathbb{R}] a Lagrange multiplier. To extend the trace of stem:[\theta_k] on stem:[\partial \Omega_k] inside stem:[\Omega_k], we can solve the following system
+
+.Expansion PDE for GD
+[.prob]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\Delta\theta_k = 0 &\qquad \text{on } \Omega_k \\
+\theta_k = 0 &\qquad \text{on } \Gamma_{fixed} \\
+\theta_k = -t\left[l_k+G(\Omega_k)\right]n_k &\qquad \text{on } \Gamma_k.
+ \end{cases}
+\end{equation*}
+++++
+****
+
+Once we know stem:[\theta_k] about stem:[\Omega_k], we can deform the whole mesh to obtain a new one of the domain stem:[\Omega_{k+1}]. It will be advisable to remesh the domain from time to time when the mesh becomes of poor quality measure in stem:[\texttt{Feel++}] (which leads to numerical errors). 
+
+For a higher regularity, we can solve the following system
+
+.Regularised expansion PDE for GD
+[.prob#regexpgd]
+****
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\Delta\theta_k = 0 &\qquad \text{on } \Omega_k \\
+\theta_k = 0 &\qquad \text{on } \Gamma_{fixed} \\
+\frac{\partial \theta_k}{\partial n} = -t\left[l_k+G(\Omega_k)\right]n_k &\qquad \text{on } \Gamma_k.
+ \end{cases}
+\end{equation*}
+++++
+****
+
+.Proposition : Descent direction of <<regexpgd>>
+[.prop]
+****
+The <<regexpgd>> still provides a descent direction.
+****
+
+.Proof
+[%collapsible.proof]
+====
+We have 
+[stem]
+++++
+\begin{align*}
+    DJ(\Omega_k)(\theta_k) + l_k Dg(\Omega_k)(\theta_k) &= \int_{\Gamma_k}\theta_k \cdot n_k \left[l_k + G(\Omega_k)\right]\\
+    &=t^{-1}\int_{\Omega_k}\Delta\theta_k \cdot \theta_k - t^{-1}\int_{\Gamma_k}\theta_k \cdot \nabla \theta_k n_k,
+\end{align*}
+++++
+because of the boundary conditions and the fact that stem:[\Delta \theta_k =0]. By integrating, we finally obtain that
+
+[stem]
+++++
+\begin{equation*}
+DJ(\Omega_k)(\theta_k) + l_k Dg(\Omega_k)(\theta_k) =-t^{-1}\int_{\Omega_k}\|\nabla \theta_k\|^2 \leq 0.   
+\end{equation*}
+++++
+====
+
+Concerning the choice of the implementation of the Lagrange multiplier, the same model as _G.Allaire_ in http://www.cmap.polytechnique.fr/~allaire/map562/cantilever.edp[his code] will be taken into account (a kind of augmented Lagrangian). We thus have
+
+[stem]
+++++
+\begin{equation*}
+    l_k = al_{k-1}+b\frac{\int_{\Gamma_k}G(\Omega_k)}{|\Gamma_k|}+c\frac{|\Omega_k|-|\Omega_0|}{|\Omega_0|},
+\end{equation*}
+++++
+with stem:[a], stem:[b] and stem:[c] parameters to be chosen according to the problem studied.
+
+=== Null Space Gradient Flow
+
+Null Space Gradient Flow (NSGF), presented in <<feppon_shape_2019>>, is a new approach to solving constrained optimization problems. Unlike traditional methods, this technique does not require necessarily the adjustment of non-physical parameters, making it highly practical and reliable. Its applicability to shape optimization applications further enhances its usefulness.
+
+The key concept behind NSGF is to modify the gradient flow algorithm to accommodate the presence of constraints. This is achieved by solving an Ordinary Differential Equation (ODE) that governs the optimization trajectories, denoted as stem:[x(t)]. The ODE takes the form:
+
+[stem]
+++++
+\begin{equation*}
+\dot x = -\alpha_J \xi_J(x(t)) - \alpha_C \xi_C(x(t))
+\end{equation*}
+++++
+
+Here, stem:[\alpha_J] and stem:[\alpha_C] positive parameters, control the influence of the objective function and constraint violation, respectively. stem:[\xi_J(x)] and stem:[\xi_C(x)] represent the null space and range space directions, respectively. The null space direction, stem:[\xi_J(x)], is obtained by projecting the gradient stem:[\nabla J(x)] onto the cone of feasible directions, ensuring descent while respecting the constraints. The range space direction, stem:[\xi_C(x)], guides the optimization path smoothly towards the feasible region.
+
+
+We consider the case where the optimization takes place on a Hilbert space stem:[V] with inner product stem:[\langle  ., . \rangle_{V}]. The transpose of the differential of a function in infinite dimension is defined as follows.
+
+.Definition : Transpose
+[.def#def:DgT]
+****
+Let stem:[g : V \to \mathbb{R}^p] a differentiable function and stem:[x] a point of stem:[V]. Then, for any stem:[\mu \in \mathbb{R}^p] it exists a unique vector stem:[Dg^T(x)(\mu) \in V] such as 
+[stem]
+++++
+\begin{equation*}
+    \forall \mu \in \mathbb{R}^p \quad \forall \phi \in V \qquad \left\langle Dg^T(x)(\mu), \phi \right\rangle_{V} = \mu^T Dg(x)(\phi).
+\end{equation*}
+++++
+The linear operator stem:[Dg^T(x) : \mathbb{R}^p \to V] is called the transpose of stem:[Dg(x)].
+****
+
+
+For equality constrained problems (see Definition 3.3 in <<feppon_shape_2019>>) , null space step stem:[\xi_J] and range space step stem:[\xi_C] are defined as the following.
+
+.Definition : Null space and range space directions
+[.def#def:xi]
+****
+For any domain stem:[\Omega], the null space and range space directions stem:[\xi_C(\Omega) : \mathbb{R}^N \to \mathbb{R}^N] and stem:[\xi_J(\Omega) : \mathbb{R}^N \to \mathbb{R}^N] are defined by
+[stem]
+++++
+\begin{align*}
+ \xi_C(\Omega)(X)= &Dg^T(\Omega)\left[(Dg(\Omega) Dg^T(\Omega))^{-1}g(\Omega)\right](X), \\
+ \xi_J(\Omega)(X)= &\nabla J(\Omega)(X) - Dg^T(\Omega)\left[(Dg(\Omega)Dg^T(\Omega))^{-1}Dg(\Omega)\nabla J(\Omega)\right](X).
+\end{align*}
+++++
+****
+
+In order to control the step size stem:[\|\theta_n\|_{L^{\infty}(\mathbb{R}^N, \mathbb{R}^N)}] and keep all values of the displacement of the order of the mesh size, the parameters stem:[\alpha_{J,n}] and stem:[\alpha_{C,n}] are updated dynamically. 
+
+.Definition :  Parameters of directions
+[.def]
+****
+We consider stem:[A_J>0] and stem:[A_C>0] two parameters and stem:[n_0>0] the stem:[n_0]-th iteration. The coefficients are updated at every iteration according to the following rules :
+
+[stem]
+++++
+ \begin{align*}
+          \alpha_{J,n} &= \begin{cases}
+            \frac{A_J \texttt{hmin}}{\|\xi_J(\Omega_n)\|_{L^{\infty}}} \qquad \qquad \qquad \qquad \quad ~  n<n_0,\\
+            \frac{A_J \texttt{hmin}}{\max\left\{\|\xi_J(\Omega_n)\|_{L^{\infty}},\|\xi_J(\Omega_{n_0})\|_{L^{\infty}}\right\}}  \qquad n\geq n_0,
+        \end{cases} \\
+        \alpha_{C,n} &= \min\left\{0.9, \frac{A_C \texttt{hmin}}{\max\{\texttt{1e-9}, \|\xi_C(\Omega_n)\|_{L^{\infty}}\}}\right\}.
+    \end{align*} 
+++++  
+****
+
+
+As explained in <<feppon_shape_2019>>, stem:[A_J] and stem:[A_C] don't need fine tuning. Thus, to obtain a more general algorithm with the least possible parameters, we take stem:[A_J=A_C=1]. 
+
+.Proposition : Bounded directions
+[.prop]
+****
+These normalizations ensure that the infinite norm of the various terms is less than the smallest mesh size, i.e. 
+[stem]
+++++
+\begin{equation*}
+    \forall n\geq 0 \quad \|\alpha_{J,n}\xi_J(\Omega_n)\|_{L^{\infty}}\leq A_J\texttt{hmin} \quad \text{and} \quad \|\alpha_{C,n}\xi_C(\Omega_n)\|_{L^{\infty}}\leq \min\{\texttt{0.9}, A_C\texttt{hmin}\}.
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Trivial.
+====
+
+The key point of this method is to be able to determine the transpose of the differential of the equality constraint. To do this, consider a Hilbert space stem:[V=H^1(\mathbb{R}^N)] such that stem:[V\subset W^{1,\infty}(\Omega, \mathbb{R}^N)] with the following scalar product
+
+[stem]
+++++
+\begin{equation*}
+    \forall (\theta,\theta') \in V^2, \quad \left\langle \theta, \theta'\right\rangle_{V}=\int_{\Omega}\gamma^2 \nabla \theta:\nabla \theta' + \theta \cdot \theta'
+\end{equation*}
+++++
+where the parameter stem:[\gamma] is set proportional to the minimum mesh element size. 
+
+
+The differential of the cost function is assumed to be of the previous form with stem:[G(\Omega)] the shape gradient. Thus, as described in <<feppon_shape_2019>> Chapter 1 on page 54, the gradient of the cost function, stem:[\nabla J], is a regularised extension of stem:[G(\Omega)n], i.e 
+
+[stem]
+++++
+\begin{equation}\label{eq:gradJ}
+   \nabla J(\Omega) = G(\Omega)n \quad \text{on } \Gamma, 
+\end{equation}
+++++
+with stem:[n] the external unit normal. 
+
+.Proposition : Transposition of the differential for volume conservation
+[.prop#eq:DgTpb]
+****
+The transposition of <<eq:Dg>> is given by 
+[stem]
+++++
+   \begin{equation}\label{eq:DgTpb}
+       \begin{cases}
+-\gamma^2\Delta(Dg^T(\Omega)(e_1)) + Dg^T(\Omega)(e_1) = 0 &\qquad \text{in } \Omega, \\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = \frac{1}{\gamma^2}n &\qquad \text{on } \Gamma,\\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = 0 &\qquad \text{on } \Gamma_{fixed}.
+ \end{cases}
+   \end{equation} 
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Let's determine stem:[Dg^T]. First at all, let stem:[e={e_1}] be the canonical basis of stem:[\mathbb{R}]. Then, by linearity of differential, we have
+
+[stem]
+++++
+\begin{equation*}
+   \forall \mu \in \mathbb{R} \quad  Dg^T(\Omega)(\mu) =\mu_1 Dg^T(\Omega)(e_1).
+\end{equation*}
+++++
+with stem:[\mu=\mu_1 e_1]. Then, by taking stem:[\mu=e_1], for all stem:[\phi \in V] and by using  <<def:DgT>>, we obtain 
+
+[stem]
+++++
+\begin{equation*}
+ \left\langle Dg^T(\Omega)(e_1), \phi \right\rangle_{V} = e_1 Dg(\Omega)(\phi),   
+\end{equation*}
+++++
+in other words,
+
+[stem]
+++++
+\begin{equation*}
+  \int_{\Omega}\gamma^2 \nabla \left(Dg^T(\Omega)(e_1)\right):\nabla \phi + Dg^T(\Omega)(e_1)\cdot \phi = \int_{\Gamma}\phi \cdot n. 
+\end{equation*}
+++++
+
+We want to solve
+
+[stem]
+++++
+\begin{equation*}
+    \int_{\Omega}\gamma^2 \nabla U : \nabla \phi + U \cdot \phi = \int_{\Gamma}\phi \cdot n,
+\end{equation*}
+++++
+for all stem:[\phi] in stem:[V] with stem:[U=Dg^T(\Omega)(e_1)]. By using a integration of parts formula, it follows that
+
+[stem]
+++++
+\begin{equation*}
+    \int_{\Omega}\left(-\gamma^2 \Delta U + U \right)\cdot \phi = \int_{\Gamma}\left(I-\gamma^2 \nabla U\right)n \cdot \phi -\int_{\Gamma_{fixed}}\gamma^2\nabla U n \cdot \phi.
+\end{equation*}
+++++
+
+By taking stem:[\nabla U n = I\frac{n}{\gamma^2}] on stem:[\Gamma] and stem:[\nabla U n = 0] on stem:[\Gamma_{fixed}], we therefore need to solve the following problem 
+
+[stem]
+++++
+\begin{equation}
+    \begin{cases}
+-\gamma^2\Delta(Dg^T(\Omega)(e_1)) + Dg^T(\Omega)(e_1) = 0 &\qquad \text{in } \Omega, \\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = \frac{1}{\gamma^2}n &\qquad \text{on } \Gamma,\\
+\frac{\partial Dg^T(\Omega)(e_1)}{\partial n} = 0 &\qquad \text{on } \Gamma_{fixed}.
+ \end{cases}
+\end{equation} 
+++++
+====
+
+
+.Proposition : Null space and range space directions for volume conservation
+[.prop]
+****
+The null space and range space directions, in the case of <<eq:Omegad>>, can be written as follow
+[stem]
+++++
+\begin{equation}
+\xi_J(\Omega)(X)=\nabla J(\Omega)(X) -\frac{\left(\int_{\partial \Omega} \nabla J(\Omega) \cdot n\right)Dg^T(e_1)(X)}{\int_{\Omega}Dg^T(\Omega)\left(e_1\right)\cdot n},
+\end{equation}
+++++
+
+and 
+
+[stem]
+++++
+\begin{equation}
+\xi_C(\Omega)(X)=\left(\frac{g(\Omega)}{\int_{\partial \Omega}Dg^T(\Omega)(e_1)\cdot n}\right)Dg^T(\Omega)\left(e_1\right)(X).
+\end{equation}
+++++
+
+****
+
+.Proof
+[%collapsible.proof]
+====
+By definition of stem:[g] and stem:[Dg], we have
+[stem]
+++++
+\begin{equation*} (Dg(\Omega)Dg^T(\Omega))^{-1}g(\Omega)=\frac{g(\Omega)}{\int_{\partial \Omega}Dg^T(\Omega)(e_1)\cdot n}
+\end{equation*}
+++++
+
+and
+
+[stem]
+++++
+\begin{equation*}
+(Dg(\Omega)Dg^T(\Omega))^{-1}Dg(\Omega)\nabla J(\Omega)=\frac{\left(\int_{\partial \Omega} \nabla J(\Omega) \cdot n\right)}{\int_{\Omega}Dg^T(\Omega)\left(e_1\right)\cdot n}.
+\end{equation*}
+++++
+
+Thus, the result can be deduced.
+====
+
+[NOTE]
+====
+All the steps above are valid when there are several equality constraints, i.e. stem:[g : V \to \mathbb{R}^p] with stem:[p\geq 1]. Furthermore, it is possible to extend this method to inequality constraints as explained in <<feppon_shape_2019>>.
+====
+
+*Numerical Implementation :* For the numerical implementation, a domain sequence, stem:[\Omega_k], is computed which verifies the following constraints 
+
+[stem]
+++++
+\begin{equation*}
+   \partial \Omega_k = \Gamma_k \cup \Gamma_{fixed},
+\end{equation*}
+++++
+
+and
+
+[stem]
+++++
+\begin{equation*}
+\Omega_{k+1} = (\textrm{Id} + \theta_k)(\Omega_k).
+\end{equation*}
+++++
+
+
+.Expansion problem for the NSGF method
+[.prob]
+****
+Using the NSGF method, we define the displacement field stem:[\theta_k] over all stem:[\Omega_k] such that 
+
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\Delta\theta_k = 0 &\qquad \text{in } \Omega_k \\
+\theta_k = 0 &\qquad \text{on } \Gamma_{fixed} \\
+\frac{\partial \theta_k}{\partial n} = -\alpha_C \xi_C(\Omega_k) - \alpha_J \xi_J(\Omega_k) &\qquad \text{on } \Gamma_k.
+ \end{cases}
+\end{equation*}
+++++
+****
+
+include::partial$bib-geoshapeopti.adoc[]

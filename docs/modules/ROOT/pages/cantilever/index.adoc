@@ -1,0 +1,414 @@
+= Linear-elasticity : Cantilever
+:page-vtkjs: true
+:page-tags: case
+:page-illustration: cantilever/3Dnohole_400.png
+:description: We simulate the geometric shape optimisation for the cantilever problem.
+
+The examples are based on Lucas Palazzolo's course. For more details, see <<internship_Palazzolo>>.
+
+== Introduction
+
+We consider a homogeneous isotropic elastic solid which occupies a bounded domain stem:[\Omega] in stem:[\mathbb{R}^2]. We suppose that the boundary is composed of three parts 
+
+[stem]
+++++
+\begin{equation*}
+\partial \Omega = \Gamma \cup \Gamma_N \cup \Gamma_D   
+\end{equation*}
+++++
+where stem:[\Gamma] is a variable part traction-free (homogeneous Neumann), stem:[\Gamma_D] is a fixed part on which the solid is fixed (homogeneous Dirichlet) and stem:[\Gamma_N] is a fixed part on which stem:[f] forces are applied (inhomogeneous Neumann). The cantilever problem is illustrated in the following image.
+
+
+.Illustration of the 2D cantilever with a hole. The stem:[\Gamma_D] and stem:[\Gamma_N] boundaries (Dirichlet condition and Neumann condition) are fixed. The stem:[\Gamma] boundary (of which the hole is a part) is movable in order to optimize the shape.
+image::cantilever/cantilever.png[width=700]
+
+.Cantilever PDE
+[.prob#cantilever:edp]
+****
+The displacement stem:[u : \mathbb{R}^N \to \mathbb{R}^N] is the solution of the system 
+
+[stem]
+++++
+\begin{equation}
+\begin{cases}
+-\nabla \cdot \sigma = 0  &\qquad \text{in } \Omega,\\
+\sigma = 2\mu e(u) + \lambda tr(e(u))I &\qquad \text{in } \Omega,\\
+u=0 &\qquad \text{on } \Gamma_D,\\
+\sigma n = f &\qquad \text{on } \Gamma_N,\\
+\sigma n = 0 &\qquad \text{on } \Gamma,
+ \end{cases}  
+\end{equation}
+++++
+with stem:[\sigma(u)\in M_N(\mathbb{R})] the stress tensor, stem:[\lambda, \mu >0] the Lamé coefficients of the material and stem:[e(u)=\frac{1}{2}\left(\nabla u + \nabla u^T\right)] the deformation tensor.
+****
+
+.Cantilever cost function
+[.prob#cantilever:minpb]
+****
+We wish to solve the following minimisation problem
+[stem]
+++++
+\begin{equation}\label{cantilever:minpb}
+\inf_{\Omega \in \Omega_{ad}} \left\{ J(\Omega) = \int_{\Gamma_N} f \cdot u  \right\}
+\end{equation}
+++++
+where the set of admissible forms is defined as
+
+[stem]
+++++
+\begin{equation}\label{cantilever:thetaad}
+\Omega_{ad}=\left\{\Omega \in C(\Omega_0) \mid \Gamma_D \cup \Gamma_N \subset \partial \Omega, ~ g(\Omega)=0\right\}
+\end{equation}
+++++
+with stem:[g] defined by <<eq:Omegad>>. 
+****
+
+[NOTE]
+====
+It should be noted that the domain of integration of the cost function does not depend on stem:[\Omega] because stem:[\Gamma_N] is fixed. Thus, the dependence with respect to the domain is ensured only through the solution of the previous model. 
+====
+
+
+
+== Theoretical formulation of the problem
+
+
+.The weak formulation of <<cantilever:edp>>
+[.prop#cantilever:weakform]
+****
+The weak formulatio of the cantilever problem is given by
+[stem]
+++++
+\begin{equation}
+\int_{\Omega}2\mu e(u):e(\phi) + \int_{\Omega}\lambda (\nabla \cdot u)(\nabla \cdot \phi) = \int_{\Gamma_N}f \cdot \phi.    
+\end{equation}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+The divergence of stem:[\sigma] is given by
+
+[stem]
+++++
+    \begin{equation*}
+\nabla \cdot \sigma = \left(\sum_{j=1}^N \frac{\partial \sigma_{ij}}{\partial x_j}\right)_{1\leq i\leq N}.
+\end{equation*}
+++++
+
+Let stem:[u \in H^1_{\Gamma_N}(\Omega)] solution of <<cantilever:edp>>. By using the fact that stem:[tr(e(u))=\nabla \cdot u], the equation can be written for stem:[1\leq i\leq N] as
+
+[stem]
+++++
+\begin{equation*}
+ -\sum_{j=1}^N \frac{\partial}{\partial x_j}\left[\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)+\lambda (\nabla \cdot u)\delta_{ij}\right]=0.   
+\end{equation*}
+++++
+
+By multiplying by a test function stem:[\phi \in H^1_{\Gamma_D}(\Omega)] and integrating over the domain stem:[\Omega], we have
+
+[stem]
+++++
+\begin{equation*}
+ \int_{\Omega}\sum_{j=1}^N\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_j}\right)\frac{\partial \phi_i}{\partial x_j}+\int_{\Omega}\lambda (\nabla \cdot u) \frac{\partial \phi_i}{\partial x_i}=\int_{\Gamma_N}f_i \phi_i.   
+\end{equation*}
+++++
+
+In addition, we have the following result
+
+[stem]
+++++
+\begin{equation}\label{ipp:utils1}
+\sum_{i,j=1}^{N}\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\frac{\partial \phi_i}{\partial x_j}=\frac{1}{2}\sum_{i,j=1}^{N}\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\left(\frac{\partial \phi_i}{\partial x_j}+\frac{\partial \phi_j}{\partial x_j}\right)=2e(u):e(\phi)  
+\end{equation}
+++++
+
+Finally, summing over the index stem:[i] in the previous formulation and using this result, we obtain the result.
+====
+
+
+.Definition : Lagrangian of <<cantilever:edp>> and <<cantilever:minpb>>
+[.def]
+****
+We denote the Lagrangian of this problem by
+[stem]
+++++
+\begin{equation*}
+\begin{array}{rcl}
+\mathcal{L}:\Omega_{ad}\times \left(H^1_{\Gamma_D}(\mathbb{R}^N)\right)^2&\to& \mathbb{R}\\
+(\Omega, v,q) &\mapsto &\int_{\Omega}2\mu e(v):e(q) + \int_{\Omega} \lambda (\nabla \cdot v)(\nabla \cdot q) - \int_{\Gamma_N} f \cdot q + \int_{\Gamma_N} f \cdot v.
+\end{array}
+\end{equation*} 
+++++
+****
+
+[NOTE]
+====
+It should be noted that the different variables of stem:[\mathcal{L}] are independent because we consider Lagrange multipliers on stem:[H^1_{\Gamma_D}(\mathbb{R}^N)] and not stem:[H^1_{\Gamma_D}(\Omega)] and especially that stem:[\Gamma_N] is independent of stem:[\Omega] because it is fixed. 
+====
+
+.Dual PDE of the cantilever problem
+[.prob]
+****
+The dual PDE of the cantilever problem is 
+[stem]
+++++
+\begin{equation*}
+\begin{cases}
+-\nabla \cdot \sigma = 0  &\qquad \text{on } \Omega\\
+\sigma = 2\mu e(p) + \lambda tr(e(p))I &\qquad \text{on } \Omega\\
+p=0 &\qquad \text{on } \Gamma_D\\
+\sigma n = -f &\qquad \text{on } \Gamma_N\\
+\sigma n = 0 &\qquad \text{on } \Gamma
+ \end{cases}  
+\end{equation*}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+The partial derivative with respect to stem:[v] : let stem:[\phi \in H^1_{\Gamma_D}(\mathbb{R}^N)]
+
+[stem]
+++++
+\begin{equation*}
+\left\langle \frac{\partial \mathcal{L}}{\partial v}(\Omega, v, q), \phi \right\rangle = \int_{\Omega}2\mu e(\phi):e(q) + \int_{\Omega} \lambda (\nabla \cdot \phi) (\nabla \cdot q) + \int_{\Gamma_N} f \cdot \phi,   
+\end{equation*}
+++++
+
+which, when it vanishes, corresponds to the weak formulation of the dual problem. 
+====
+
+[NOTE]
+====
+Note that this corresponds exactly to the primal problem with a minus sign. This is due in particular to the choice of stem:[J] and the boundary conditions of the primal problem. Indeed, we have stem:[J] which depends on stem:[f] on stem:[\Gamma_N] and the boundary conditions are all null except on stem:[\Gamma_N] which is equal to stem:[f]. Thus, we can avoid solving the dual problem in this case and simply use the solution of the primal problem.
+====
+
+.Shape gradient for the cantilever problem
+[.prop]
+****
+The shape gradient for the cantiler problem is defined by
+[stem]
+++++
+\begin{equation}\label{cantilever:gradshape}
+    G(\Omega)=-2\mu\|e(u)\|^2-\lambda(tr(e(u)))^2.
+\end{equation}
+++++
+****
+
+.Proof
+[%collapsible.proof]
+====
+Let's calculate the partial derivative of stem:[\mathcal{L}] with respect to the stem:[\Omega] domain in the stem:[\theta] direction
+
+[stem]
+++++
+\begin{equation*}
+ \frac{\partial \mathcal{L}}{\partial \Omega}(\Omega, v, q)(\theta)= \int_{\partial \Omega}\theta \cdot n \left[ 2\mu e(v):e(q) + \lambda (\nabla \cdot v)(\nabla \cdot q)\right]   
+\end{equation*}
+++++
+by using <<Prop:diffJOmega>>. When we evaluate this derivative with the state stem:[u(\Omega)] and the adjoint state stem:[p(\Omega)=u(\Omega)], we find exactly the value of the derivative of the cost function
+
+[stem]
+++++
+\begin{equation}\label{cantilever:shaped}
+\frac{\partial \mathcal{L}}{\partial \Omega}\left(\Omega, u(\Omega), p(\Omega)\right)(\theta)= -\int_{\Gamma}\theta \cdot n \left[ 2\mu \|e(u)\|^2 + \lambda tr(e(u))^2\right] = DJ(\Omega)(\theta),
+\end{equation}
+++++
+
+as explained here <<lagmethod:gradientJ>>. Thus by definition we obtain the shape gradient. 
+====
+
+
+
+== Experimental Evaluation
+
+In this section, we will present various results on the optimization problem concerning the shape of cantilevers. The initial domain considered is a trapezoid with two feet in the 2D case (four feet in the 3D case). The choice of a trapezoid as the initial shape is advantageous due to its simplicity and its ability to approximate the solution of the problem. Throughout this section, unless specified otherwise, all results have been obtained using stem:[\mathbb{P}_1] continuous finite elements. All simulations are carried out using the classic gradient descent method. The NSGF method is used in the following example, a rigid body in a Stokes fluid.
+
+
+=== 2D simulations for various types of cantilever  
+
+We present the application of shape optimization to a 2D cantilever with two pillars. The specific parameter values used in the analysis are detailed in the following table.
+
+.Geometric parameters and Lamé coefficient of the initial domain for the 2D case of the cantilever. The Lamé coefficients are stem:[\lambda] and stem:[\mu]. stem:[H] represents the height of the trapezoid, stem:[L_1] the large base and stem:[L_2] the small base. The force applied to the curve stem:[\Gamma_N] is defined by stem:[f].
+|===
+
+|Symbol |Value (dimensionless) 
+
+|stem:[\lambda] | stem:[50/9]
+|stem:[\mu] | stem:[350/27]
+|stem:[H] | stem:[9]
+|stem:[L_1] | stem:[8]
+|stem:[L_2] | stem:[2]
+|stem:[f] | stem:[(0,-1)]
+
+|===
+
+
+*No  hole :* 
+
+We begin by considering the simplest case, which is the cantilever without any holes, as depicted in Figures below. To ensure clear visibility of the mesh in print, a discretization parameter of stem:[h=0.4] is set. For the initialization of the Lagrange multiplier, we choose stem:[l=0.5]. Additionally, the values of stem:[a=b=0.5] and stem:[c=10] are set, along with a descent step of stem:[t=0.2]. These specific values have been determined through empirical testing to achieve optimal performance.
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the 2D cantilever without hole.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[4.6834] 
+|stem:[3.1346] 
+|stem:[1.3630e-2] 
+|stem:[1.696e-2] 
+|stem:[125]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 2D cantilever without hole with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The iterations range from stem[0] to stem:[125].
+image::cantilever/results_nohole-2D-l0.5-t0.2-h0.4-a0.5b0.5-c10-n200.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 2D cantilever without hole with the following parameters:  stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=60]) is displayed in the middle. The final domain (stem:[k=125]) is displayed on the right. 
+|===
+
+image:cantilever/nohole_0.png[width=300] 
+image:cantilever/nohole_60.png[width=300] 
+image:cantilever/nohole_125.png[width=300]
+
+|===
+
+
+*One hole :* 
+
+The second test consists of studying the cantilever with a single hole. The results obtained are presented in Figures below. We use a discretization parameter of stem:[h=0.4]. For the Lagrange multiplier, we initialize with stem:[l=0.5], and set stem:[a=b=0.5] and stem:[c=10] with a descent step of stem:[t=0.2].
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the one hole 2D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[4.7035] 
+|stem:[3.2162] 
+|stem:[2.9980e-3] 
+|stem:[1.8906e-2] 
+|stem:[125]
+|===
+
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 2D cantilever with one hole with the following parameters: stem:[h=0.], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The iterations range from stem:[0] to stem:[125].
+image::cantilever/results_hole-2D-l0.5-t0.2-h0.4-a0.5b0.5-c10-n200.png[width=700]
+
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 2D cantilever with one hole with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=60]) is displayed in the middle. The final domain (stem:[k=125]) is displayed on the right.
+|===
+
+image:cantilever/hole_0.png[width=300] 
+image:cantilever/hole_60.png[width=300] 
+image:cantilever/hole_125.png[width=300]
+
+|===
+
+
+
+*Four holes :*
+
+The last type of cantilever studied is one with four holes in its domain. The results are displayed in the figures below. We use a discretization parameter of stem:[h=0.4]. For the Lagrange multiplier, we initialize with stem:[l=0.5], and set stem:[a=b=0.5] and stem:[c=10] with a descent step of stem:[t=0.2].
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the four holes 2D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[5.1589] 
+|stem:[3.3770] 
+|stem:[2.5317e-3] 
+|stem:[1.5615e-2] 
+|stem:[125]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 2D cantilever with 4 holes with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The iterations range from stem:[0] to stem:[125].
+image::cantilever/results_4holes-2D-l0.5-t0.2-h0.4-a0.5b0.5-c10-n200.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 2D cantilever with 4 holes with the following parameters: stem:[h=0.4], stem:[t=0.2], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=10]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=60]) is displayed in the middle. The final domain (stem:[k=125]) is displayed on the right.
+|===
+
+image:cantilever/4hole_0.png[width=300]
+image:cantilever/4hole_60.png[width=300]
+image:cantilever/4hole_125.png[width=300]
+
+|===
+
+
+The results presented above demonstrate that satisfactory outcomes can be achieved using the proposed method. Notably, the obtained shapes closely resemble those reported in various papers that focus on optimizing the geometrical shape of cantilevers, such as <<allaire_conception_2006>>. Furthermore, we successfully decrease the cost function while approaching the initial volume of the domain, which aligns precisely with the desired behavior. It is worth noting that potential geometric instabilities, in the form of spikes, may emerge on stem:[\Gamma_D] after a certain number of iterations. These spikes are also observed in the 3D case, as illustrated in the subsequent figures.
+
+=== 3D simulations for various types of cantilever :
+
+In this section, we address the case of the 3D cantilever, which introduces additional complexities compared to the 2D case and results in longer computation times. Incorporating holes into the structure also increases the risk of encountering mesh superposition issues. The overall geometry of the 3D cantilever remains similar to the 2D case, with the addition of four pillars, and boundary conditions are now applied to surfaces instead of curves. The specific parameter values used in the analysis are provided in detail in following table.
+
+
+.Geometric parameters and Lamé coefficient of the initial domain for the 2D case of the cantilever. The Lamé coefficients are stem:[\lambda] and stem:[\mu]. stem:[H] represents the height of the truncated pyramid, stem:[C_1] the side of the largest square base and stem:[C_2] the side of the smallest square base. The force applied to the surface stem:[\Gamma_N] is defined by stem:[f].
+|===
+
+|Symbol |Value (dimensionless) 
+
+|stem:[\lambda] | stem:[50/9]
+|stem:[\mu] | stem:[350/27]
+|stem:[H] | stem:[9]
+|stem:[C_1] | stem:[8]
+|stem:[C_2] | stem:[2]
+|stem:[f] | stem:[(0,-1,0)]
+
+|===
+
+
+*No hole :*
+
+Let's first consider the case without a hole. We use a discretization parameter of stem:[h=0.8]. For the coefficients affecting the optimization problem, we set stem:[l=0.5], stem:[a=b=0.5], stem:[c=3], and choose a descent step stem:[t] of stem:[0.1]. The results of this test are presented in Figures below.
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the no hole 3D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[4.8060] 
+|stem:[3.0484] 
+|stem:[0.1439] 
+|stem:[2.1647e-2] 
+|stem:[400]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 3D cantilever without hole with the following parameters: stem:[h=0.8], stem:[t=0.1], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The iterations range from stem:[0] to stem:[400].
+image::cantilever/results_nohole-3D-l0.5-t0.1-h0.8-a0.5b0.5-c2-n500.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 3D cantilever without hole with the following parameters:  stem:[h=0.8], stem:[t=0.1], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=150]) is displayed in the middle. The final domain (stem:[k=400]) is displayed on the right.
+|===
+
+image:cantilever/3Dnohole_0.png[width=300]
+image:cantilever/3Dnohole_120.png[width=300]
+image:cantilever/3Dnohole_400.png[width=300]
+
+|===
+
+
+*One hole :*
+
+In the next test, we add a hole inside the material. The results are presented in Figures below. We use a discretization parameter of stem:[h=0.8]. The other coefficients used are stem:[l=0.5], stem:[a=b=0.5], stem:[c=2], and stem:[t=0.08]. 
+
+
+.Comparison of the cost function between the initial domain and the final domain, the volume error between the two domains, the stem:[H^1]-norm of the displacement field at the end and the number of iterations for the one hole 3D cantilever.
+|===
+|stem:[J(\Omega_0)] |stem:[J(\Omega_{n_{final}})] |stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] |stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] |stem:[n_{final}] 
+|stem:[6.4813] 
+|stem:[3.7726] 
+|stem:[0.2582] 
+|stem:[4.7253e-2] 
+|stem:[250]
+|===
+
+.Evolution of the cost function, the volume of the domain stem:[\Omega_k] and the norm of stem:[\theta_k] of the 3D cantilever with holes with the following parameters: stem:[h=0.8], stem:[t=0.08], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The iterations range from stem:[0] to stem:[250].
+image::cantilever/results_hole-3D-l0.5-t0.08-h0.8-a0.5b0.5-c2-n500.png[width=700]
+
+.Visualisation of the results obtained during different iterations of the algorithm for the shape optimisation of the 3D cantilever with holes with the following parameters:  stem:[h=0.8], stem:[t=0.08], stem:[l=0.5], stem:[a=b=0.5] and stem:[c=2]. The initial domain (stem:[k=0]) is shown on the left. The intermediate domain (stem:[k=150]) is displayed in the middle. The final domain (stem:[k=250]) is displayed on the right.
+|===
+
+image:cantilever/3Dhole_0.png[width=300]
+image:cantilever/3Dhole_120.png[width=300]
+image:cantilever/3Dhole_250.png[width=300]
+
+|===
+    
+ 
+It is important to note that the chosen optimal shape in the simulations effectively reduces the cost function while maintaining the volume. However, due to limitations, we had to prematurely halt the simulations. If allowed to continue, the cost function would have been further minimized, resulting in a more optimal shape. Nonetheless, the obtained shape presents several issues. Specifically, certain areas such as the feet and top part exhibit more prominent outgrowths, which can be attributed to volume conservation. The shape optimization process tends to hollow out the cantilever below the desired volume (between the four legs). As a result, to compensate for this volume loss, protrusions seem to emerge after a certain number of iterations. Another significant issue encountered is mesh collision and overlap. Additionally, the discontinuities observed in the curves of the different simulations correspond to the remeshing that occurs during the iterations.
+
+include::partial$bib-geoshapeopti.adoc[]

@@ -1,0 +1,9 @@
+= Implementation in Feel++
+
+:page-tags: manual
+:description: Geometric Shape Optimisation implementation
+:page-illustration: 
+:stem: latexmath
+:toc:
+
+The code is based on Lucas Palazzolo's course. For more details, see <<internship_Palazzolo>>.
