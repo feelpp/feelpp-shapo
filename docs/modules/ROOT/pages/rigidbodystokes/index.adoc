@@ -505,7 +505,7 @@ For this specific test case, we employed an initial discretization of stem:[h=0.
 
 |Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
 
-|GD | stem:[16.7729] | stem:[14.2940] | stem:[5.2101e-05] | stem:[1.0154e-4] | stem:[500]
+|GD | stem:[16.7729] | stem:[14.3058] | stem:[5.2101e-05] | stem:[1.0154e-4] | stem:[500]
 |NSGF | stem:[16.9087] | stem:[14.5917] | stem:[1.1554e-3] | stem:[3.3883e-4] | stem:[500]
 
 |===
@@ -602,8 +602,8 @@ As depicted in the previous figures, the simulations are terminated before the c
 
 |Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
 
-|GD | stem:[24.1304] | stem:[16.9092] | stem:[5.4293e-3] | stem:[5.0132e-3] | stem:[500]
-|NSGF | stem:[24.1304] | stem:[16.9188] | stem:[5.7716e-3] | stem:[1.7381e-3] | stem:[873]
+|GD | stem:[24.1304] | stem:[16.3814] | stem:[5.4293e-3] | stem:[5.0132e-3] | stem:[500]
+|NSGF | stem:[24.1304] | stem:[16.9092] | stem:[5.7716e-3] | stem:[1.7381e-3] | stem:[873]
 
 |===
 
@@ -627,7 +627,7 @@ In this case, premature termination of the simulation is less evident, and conve
 
 |Method | stem:[J(\Omega_0)] | stem:[J(\Omega_{n_{final}})] | stem:[\|\|\Omega_0\|-\|\Omega_{n_{final}}\|\|] | stem:[\|\|\theta_{n_{final}}\|\|_{H^1}] | stem:[n_{final}]
 
-|GD | stem:[-9.0952e-3] | stem:[-323.3069] | stem:[3.9189e-2] | stem:[3.7323e-2] | stem:[980]
+|GD | stem:[-9.0952e-3] | stem:[-323.3069] | stem:[3.9189e-2] | stem:[3.900e-2] | stem:[980]
 |NSGF | stem:[-9.0952e-3] | stem:[-234.4491] | stem:[1.5241e-2] | stem:[6.3734e-3] | stem:[1000]
 
 |===
