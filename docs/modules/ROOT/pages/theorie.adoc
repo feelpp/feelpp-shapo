@@ -280,14 +280,14 @@ When the state problem has a Dirichlet condition, we must add another Lagrange m
 \begin{equation*}
 \begin{array}{rcl}
 \mathcal{L}:C(\Omega_0)\times V\times V\times V&\to& \mathbb{R}\\
-(\Omega, v,q, \psi) &\mapsto &J(\Omega) + E(v,q) + F(v,\psi),
+(\Omega, v,q, \psi) &\mapsto &J(\Omega) + \tile{E}(v,q) + F(v,\psi),
 \end{array}
 \end{equation*}
 ++++
-where stem:[F] represents the constraint associated with the Dirichlet condition.
+where stem:[F] represents the constraint associated with the Dirichlet condition and stem:[\tilde{E}] the integration of the strong formulation.
 ****
 
-To simplify the following, we will assume that stem:[E] and stem:[F] are bilinear. We then quickly obtain the different equations and the gradient of stem:[J] (assuming all the necessary regularities). 
+To simplify the following, we will assume that stem:[E], stem:[\tilde{E}] and stem:[F] are bilinear. We then quickly obtain the different equations and the gradient of stem:[J] (assuming all the necessary regularities). 
 
 
 .Proposition : Primal problem thanks to the Lagrangian
