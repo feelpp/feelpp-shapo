@@ -535,57 +535,56 @@ MathJax.Hub.Config({
 <div class="paragraph">
 <p>Now that the data needed to solve a shape optimization problem has been described, let&#8217;s present the main points of the algorithm.</p>
 </div>
-<pre id="shapeopti" style="display:hidden;">
-\begin{algorithm}
-    \caption{Geometric shape optimisation algorithm}
-    \hspace*{\algorithmicindent} \textbf{Input :} Parameters json file  \\
-    \hspace*{\algorithmicindent} \textbf{Output :} Csv and paraview files for each iteration
-    \begin{algorithmic}
-    \FUNCTION{ShapeOpti}{}
+<div class="literalblock pseudocode">
+<div class="content">
+<pre>\begin{algorithm}
+\caption{Geometric shape optimisation algorithm}
+\begin{algorithmic}
+\STATE \textbf{Input:} Parameters json file
+\STATE \textbf{Output:} Csv and paraview files for each iteration\\
 
-
-      \STATE \textbf{Initialization:}
-      \STATE  $n=0$.
-      \STATE  - Reading the json file containing the parameters.
-      \STATE  - Solve the primal problem.
-      \STATE  - Solve the dual problem.
-      \STATE  - Solve the postprocessing problem.
-
-      \IF {NSGF}
-        \STATE - Solve the postprocessing of $\xi_J$ problem.
-        \STATE - Solve the $Dg^T$ problem.
-      \ENDIF
-
-      \STATE - Solve the expansion problem : $\theta_n$.
-
-      \WHILE{$\|\theta_n\|_{H^1}>\varepsilon_{tol}$ AND $n<N_{max}$}
-
-        \STATE  - Deforming the mesh by applying $\theta_n$.
-
-        \IF {mesh quality $< q$}
-          \STATE - Remesh.
-        \ENDIF
-
-        \STATE  - Solve the primal problem.
-        \STATE  - Solve the dual problem.
-        \STATE  - Solve the postprocessing problem.
-
-        \IF {NSGF}
-          \STATE - Solve the postprocessing of $\xi_J$ problem.
-          \STATE - Solve the $Dg^T$ problem.
-        \ENDIF
-
-        \STATE - Solve the expansion problem : $\theta_n$.
-
-        \STATE $n=n+1$.
-        \STATE - Save the results.
-
-
-      \ENDWHILE
-    \ENDFUNCTION
-    \end{algorithmic}
-\end{algorithm}
-</pre>
+\STATE \textbf{Initialization:}
+  \STATE
+  \STATE
+  \STATE  $\quad$- $n=0$.
+  \STATE  $\quad$- Reading the json file containing the parameters.
+  \STATE  $\quad$- Solve the primal problem.
+  \STATE  $\quad$- Solve the dual problem.
+  \STATE  $\quad$- Solve the postprocessing problem.
+  \STATE
+  \IF {NSGF}
+      \STATE $\quad$- Solve the postprocessing of $\xi_J$ problem.
+      \STATE $\quad$- Solve the $Dg^T$ problem.
+  \ENDIF
+  \STATE
+  \STATE $\quad$- Solve the expansion problem : $\theta_n$.
+\STATE \textbf{Main loop:}
+\STATE
+\STATE
+  \WHILE{$\|\theta_n\|_{H^1}&gt;\varepsilon_{tol}$ AND $n&lt;N_{max}$}
+    \STATE  $\quad$- Deforming the mesh by applying $\theta_n$.
+    \STATE
+    \IF {mesh quality $&lt; q$}
+      \STATE $\quad$- Remesh.
+    \ENDIF
+    \STATE
+    \STATE  $\quad$- Solve the primal problem.
+    \STATE  $\quad$- Solve the dual problem.
+    \STATE  $\quad$- Solve the postprocessing problem.
+    \STATE
+    \IF {NSGF}
+      \STATE $\quad$- Solve the postprocessing of $\xi_J$ problem.
+      \STATE $\quad$- Solve the $Dg^T$ problem.
+    \ENDIF
+    \STATE
+    \STATE $\quad$- Solve the expansion problem : $\theta_n$.
+    \STATE  $\quad$- $n=n+1$.
+    \STATE $\quad$- Save the results.
+  \ENDWHILE
+\end{algorithmic}
+\end{algorithm}</pre>
+</div>
+</div>
 <div class="paragraph">
 <p>For reasons of visibility, certain points have been omitted, such as the calculation of the Lagrange multiplier in the case of gradient descent, or certain coefficients in the case of null space gradient flow. The various results obtained are saved after each iteration in a csv file for all cost, volume and \(H^1\)-norm functions, etc. For fields and meshes, paraview files are also exported after each iteration.</p>
 </div>
