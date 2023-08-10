@@ -1,9 +1,218 @@
 = Implementation in Feel++
-
+:page-pseudocode: ["shapeopti"]
 :page-tags: manual
 :description: Geometric Shape Optimisation implementation
-:page-illustration: 
+:page-illustration:
 :stem: latexmath
 :toc:
 
+
+
+
 The code is based on Lucas Palazzolo's course. For more details, see <<internship_Palazzolo>>.
+
+The `shape_opti.py` code for solving geometric shape optimization problems relies on the Feel++ toolboxes, specifically `cfpdes`, `fluid`, and `solid`. To solve a problem of this nature, a set of JSON files is required, each serving a specific purpose in the optimization process. Here, we'll provide an overview of these JSON files and their roles within the implementation.
+
+The `Models` in the JSON files correspond to different toolboxes and problem types. The following is a list of the valid `Models` names:
+
+- `primal_cfpdes`
+- `primal_fluid`
+- `primal_solid`
+- `dual_cfpdes`
+- `dual_fluid`
+- `dual_solid`
+- `expansion`
+- `postproc`
+- `dgtranspose`
+
+The choice of `Model` depends on the toolbox you are using and the specific type of optimization problem you intend to solve. Here's an example to help illustrate how these JSON files are used:
+
+[source,json]
+----
+"Models": <1>
+{
+  "primal_cfpdes":<2>
+  {
+    "equations" : ...
+  }
+}
+----
+<1> start section `Models` defined by the toolbox to define the main configuration and particularly the set of equations to be solved
+<2> toolbox keyword 
+
+For some json files, it will be necessary to use save fields in order to use them as parameters. To do this, fill in the "Meshes" field as follows: 
+
+
+
+[source,json]
+----
+"Meshes":
+{
+    "expansion":
+    {
+        
+        "Fields":  <1>
+        {
+            "primal_u" :
+            {
+                "filename":"$cfgdir/../feelppdb/shape_opti_stokes/np_1/primal_fluid.save/velocity.h5",
+                "basis":"Pchv2"
+            },
+            "dual_u" :
+            {
+                "filename":"$cfgdir/../feelppdb/shape_opti_stokes/np_1/dual_fluid.save/velocity.h5",
+                "basis":"Pchv2"
+            },
+            "DgT":
+            {
+                "filename":"$cfgdir/../feelppdb/shape_opti_stokes/np_1/Dgtranspose.save/DgT.h5",
+                "basis":"Pchv1"
+            }
+        }
+    }
+    
+}
+----
+<1> The different fields that we want to import by specifying the path and the basis.
+ 
+
+
+
+== Json files 
+
+=== Primal problem
+Solves the primal problem. The json file of the primal problem must contain in the `Models` field: `primal_cfpdes`, `primal_fluid` or `primal_solid`. Don't forget to save all fields in post-processing.
+
+=== Dual problem
+Solves the dual problem. The json file of the dual problem must contain in the `Models` field: `dual_cfpdes`, `dual_fluid`, or `dual_solid`. Don't forget to save all fields in post-processing.
+
+=== Postprocessing 
+Computes some data needed to compute the stem:[\theta] displacement field. The json file for the associated problem must contain `postproc` in the `Models` field. Load the various fields required. In postprocessing, save the following fields:
+
+- `cost_function` : Cost function
+- `volume` : Volume of the domain
+- `gradient` : Shape gradient
+
+If GD :
+
+- `surface_movable` : Surface of the movable part of the domain
+
+If NSGF :
+
+- `DgDgT` : Computation of stem:[DgDg^T].
+- `DggradJ` : Computation of stem:[Dg\nabla J].
+- `norm_inf_DgT` : Computation of stem:[\|Dg^T\|].
+
+
+=== Postprocessing of stem:[\xi_J]
+Only necessary when using the NSGF method. Computes the infinite norm of stem:[\xi_J]. The json file for the associated problem must contain `postproc` in the `Models` field. You need to load the various fields required. In postprocessing, save `norm_inf_xij`, which corresponds to the infinite norm of stem:[\xi_J].
+
+=== Transpose of stem:[Dg]
+Solve the PDE to obtein the transpose of stem:[Dg]. The json file for the associated problem must contain `dgtranspose` in the `Models` field. In postprocessing, save all the fields.
+
+=== Expansion 
+Computes the displacement field. The json file for the expansion problem must contain `expansion` in the `Models` field. Load the various fields required. In post-processing, save the stem:[\|\theta\|_{H^1}].
+
+
+=== Parameters 
+Contains all the information needed to solve the optimization problem. Depending on the field, certain subfields must be specified in order to refer to dedicated problems: `primal`, `dual`, `expansion`, `postproc`, `config`, `postprocxij`, `dgt`. The json must have the following form: 
+
+[source,json]
+----
+{
+    "is_compliant" : 0, <1>
+    "geometry" : "stokes/3D/sphere3D.geo", <2>
+    "name" : "fluid_K11", <3>
+    "required_facets" : "GammaB", <4>
+    "folders" : { "folder"  : "shape_opti_stokes", "primal" : "stokes/3D/fluid/primal3D_fluid.json", "dual" : "stokes/3D/fluid/dual3D_fluid.json", "expansion" : "stokes/3D/fluid/expansion3D_P1_fluid.json", "postproc" : "stokes/3D/fluid/postprocess3D_fluid.json", "config" : "stokes/stokes_lu.cfg"}, <5>
+    "h" : 0.2, <6>
+    "dim" : 3, <7>
+    "opti_type" : "GD", <8>
+    "type" : {"primal" : "fluid", "dual" : "fluid", "expansion" : "cfpdes", "postproc" : "cfpdes"}, <9>
+    "param_primal" : {"Mu": 1, "U_1": 1, "U_1x" : 0, "U_1y" : 0, "U_1z" : 0, "U_2": 0 , "U_2x" : 0, "U_2y" : 0, "U_2z" : 0, "U_3" : 0, "U_3x" : 0, "U_3y" : 0, "U_3z" : 0, "Uinf_1": 0, "Uinf_2": 0, "Uinf_3" : 0}, <10>
+    "param_dual" : {"Mu":1, "alpha_1": 1, "alpha_1x" : 0, "alpha_1y" : 0, "alpha_1z" : 0, "alpha_2": 0, "alpha_2x" : 0, "alpha_2y" : 0, "alpha_2z" : 0, "alpha_3" : 0, "alpha_3x" : 0, "alpha_3y" : 0, "alpha_3z" : 0}, <11>
+    "param_expansion" : {"Mu":1, "t":0.03, "l":20}, <12>
+    "param_postproc" : {"Mu" : 1, "alpha_1": 1, "alpha_1x" : 0, "alpha_1y" : 0, "alpha_1z" : 0, "alpha_2": 0, "alpha_2x" : 0, "alpha_2y" : 0, "alpha_2z" : 0, "alpha_3" : 0, "alpha_3x" : 0, "alpha_3y" : 0, "alpha_3z" : 0}, <13>
+    "param_dgt" : {"Eps" : }, <14>
+    "param_optimization" : {"l":20, "t":0.03, "a":0.05, "b":0.5, "c" : 1000, "Nmax" : 1000, "etol" : 1e-7} <15>
+}
+
+
+----
+<1> `0` if no dual problem, `1` otherwise
+<2> path of the initial mesh file
+<3> name of the study case
+<4> faced of the mesh that we don't want to remesh
+<5> path of the folder where the various data are/will be stored and path of json files
+<6> mesh size
+<7> dimension of the problem
+<8> type of optimization : gradient descent `GD` or null space gradient flow `NSGF`
+<9> type of tooloboxes used for the json files : `cfpdes`, `fluid`, `solid`
+<10> parameters of the primal json
+<11> parameters of the dual json
+<12> parameters of the expansion json
+<13> parameters of the postproc json
+<14> parameters of the dgt jon
+<15> parameters of the optimization problem : `Nmax`, `etol`. Specifically for the gradient descent we have to add : `l`, `t`, `a`, `b`, `c`.
+
+== Algorithm 
+Now that the data needed to solve a shape optimization problem has been described, let's present the main points of the algorithm.
+
+.Geometric shape optimisation algorithm 
+++++
+<pre id="shapeopti" style="display:hidden;">
+\begin{algorithm}
+    \caption{Geometric shape optimisation algorithm}
+    \hspace*{\algorithmicindent} \textbf{Input :} Parameters json file  \\
+    \hspace*{\algorithmicindent} \textbf{Output :} Csv and paraview files for each iteration
+    \begin{algorithmic}
+    \FUNCTION{ShapeOpti}{}
+
+
+      \STATE \textbf{Initialization:} 
+      \STATE  $n=0$.
+      \STATE  - Reading the json file containing the parameters.
+      \STATE  - Solve the primal problem. 
+      \STATE  - Solve the dual problem.
+      \STATE  - Solve the postprocessing problem.
+
+      \IF {NSGF} 
+        \STATE - Solve the postprocessing of $\xi_J$ problem.
+        \STATE - Solve the $Dg^T$ problem.
+      \ENDIF
+      
+      \STATE - Solve the expansion problem : $\theta_n$.
+
+      \WHILE{$\|\theta_n\|_{H^1}>\varepsilon_{tol}$ AND $n<N_{max}$}
+
+        \STATE  - Deforming the mesh by applying $\theta_n$.
+
+        \IF {mesh quality $< q$}
+          \STATE - Remesh.
+        \ENDIF
+
+        \STATE  - Solve the primal problem. 
+        \STATE  - Solve the dual problem.
+        \STATE  - Solve the postprocessing problem.
+
+        \IF {NSGF} 
+          \STATE - Solve the postprocessing of $\xi_J$ problem.
+          \STATE - Solve the $Dg^T$ problem.
+        \ENDIF
+      
+        \STATE - Solve the expansion problem : $\theta_n$.
+
+        \STATE $n=n+1$.
+        \STATE - Save the results.
+
+
+      \ENDWHILE
+    \ENDFUNCTION
+    \end{algorithmic}
+\end{algorithm}
+</pre>
+++++
+
+For reasons of visibility, certain points have been omitted, such as the calculation of the Lagrange multiplier in the case of gradient descent, or certain coefficients in the case of null space gradient flow. The various results obtained are saved after each iteration in a csv file for all cost, volume and stem:[H^1]-norm functions, etc. For fields and meshes, paraview files are also exported after each iteration.
+
+
