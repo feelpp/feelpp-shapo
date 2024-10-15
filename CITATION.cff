@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: Feel++ Shape Optimization Toolbox
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Lucas
+    family-names: Palazollo
+    email: lucas.palazollo@inria.fr
+    affiliation: INRIA
+    orcid: 'https://orcid.org/0009-0002-4188-014X'
+  - given-names: Christophe
+    family-names: Prud'homme
+    email: christophe.prudhomme@cemosis.fr
+    affiliation: University of Strasbourg
+    orcid: 'https://orcid.org/0000-0003-2287-2961'
+repository-code: 'https://github.com/feelpp/feelpp-shapo'
+url: 'https://feelpp.github.io/feelpp-shapo/'
+license: LGPL-3.0-or-later
