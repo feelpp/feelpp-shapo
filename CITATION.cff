@@ -15,6 +15,10 @@ authors:
     email: christophe.prudhomme@cemosis.fr
     affiliation: University of Strasbourg
     orcid: 'https://orcid.org/0000-0003-2287-2961'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.13934939
+    description: Zenodo
 repository-code: 'https://github.com/feelpp/feelpp-shapo'
 url: 'https://feelpp.github.io/feelpp-shapo/'
 license: LGPL-3.0-or-later
